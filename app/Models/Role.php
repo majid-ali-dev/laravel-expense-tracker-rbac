@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Permission;
+use App\Models\User;
+
+class Role extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['name'];
+
+    // Role → Users
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+
+    // Role → Permissions
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
+    }
+}
