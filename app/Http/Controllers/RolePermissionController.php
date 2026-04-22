@@ -8,29 +8,32 @@ use Illuminate\Http\Request;
 
 class RolePermissionController extends Controller
 {
-    // Show all roles
     public function index()
     {
-        $roles = Role::paginate(5);
+        $roles = Role::with('permissions')->paginate(5);
 
-        return view('manager.role_and_permissions.index', compact('roles'));
+        return view('manager.role_permissions.index', compact('roles'));
     }
 
-    // Show permissions assign page
     public function edit(Role $role)
     {
-        $permissions = Permission::all();
+        $role->load('permissions');
+        $permissions = Permission::orderBy('name')->get();
 
-        return view('manager.role_and_permissions.edit', compact('role', 'permissions'));
+        return view('manager.role_permissions.edit', compact('role', 'permissions'));
     }
 
-    // Update permissions for role
     public function update(Request $request, Role $role)
     {
-        // sync permissions
-        $role->permissions()->sync($request->permissions);
+        $validated = $request->validate([
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['integer', 'exists:permissions,id'],
+        ]);
 
-        return redirect()->route('role.permissions.index')
+        $role->permissions()->sync($validated['permissions'] ?? []);
+
+        return redirect()
+            ->route('role.permissions.index')
             ->with('success', 'Permissions Assigned Successfully');
     }
 }

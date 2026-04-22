@@ -8,66 +8,86 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    // Show all users
     public function index()
     {
-        $users = User::where('id', '!=', auth()->id())->paginate(5);
+        $users = User::with('roles')
+            ->where('id', '!=', auth()->id())
+            ->paginate(5);
 
         return view('manager.users.index', compact('users'))->with('success', 'Users List');
     }
 
-    // Show create form
     public function create()
     {
-        return view('manager.users.create')->with('success', 'User creation page');
+        $roles = Role::orderBy('name')->get();
+
+        return view('manager.users.create', compact('roles'))->with('success', 'User creation page');
     }
 
-    // Store new user
     public function store(Request $request)
     {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => bcrypt($request->password),
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'min:5'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['integer', 'exists:roles,id'],
         ]);
 
-        // default role assign (member)
-        $role = Role::where('name', 'member')->first();
-        $user->roles()->attach($role->id);
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => bcrypt($validated['password']),
+        ]);
+
+        $roleIds = $validated['roles'] ?? [];
+
+        if (empty($roleIds)) {
+            $memberRoleId = Role::where('name', 'member')->value('id');
+
+            if ($memberRoleId) {
+                $roleIds = [$memberRoleId];
+            }
+        }
+
+        $user->roles()->sync($roleIds);
 
         return redirect()->route('users.index')->with('success', 'User Create Successful');
     }
 
-    // Show edit form
     public function edit($id)
     {
-        $user = User::findOrFail($id);
-        $roles = Role::all();
+        $user = User::with('roles')->findOrFail($id);
+        $roles = Role::orderBy('name')->get();
 
         return view('manager.users.edit', compact('user', 'roles'))->with('success', 'User Edit Page');
     }
 
-    // Update user
     public function update(Request $request, $id)
     {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $id],
+            'phone' => ['required', 'string', 'max:255'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['integer', 'exists:roles,id'],
+        ]);
+
         $user = User::findOrFail($id);
 
         $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
         ]);
 
-        // Update roles if provided
-        if ($request->roles) {
-            $user->roles()->sync($request->roles);
-        }
+        $user->roles()->sync($validated['roles'] ?? []);
 
         return redirect()->route('users.index')->with('success', 'User Update Successful');
     }
 
-    // Delete user
     public function delete($id)
     {
         $user = User::findOrFail($id);

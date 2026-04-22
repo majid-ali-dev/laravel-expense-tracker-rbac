@@ -22,11 +22,11 @@
             <td>{{ $loop->iteration }}</td>
             <td>{{ $permission->name }}</td>
             <td>
-                <a href="{{ route('permissions.edit',$permission->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                <a href="{{ route('permissions.edit',$permission->id) }}" class="btn btn-sm btn-warning"><span class="material-icons">edit</span></a>
 
                 <form action="{{ route('permissions.delete',$permission->id) }}" method="POST" style="display:inline;">
                     @csrf
-                    <button class="btn btn-sm btn-danger">Delete</button>
+                    <button class="btn btn-sm btn-danger"><span class="material-icons">delete</span></button>
                 </form>
             </td>
         </tr>

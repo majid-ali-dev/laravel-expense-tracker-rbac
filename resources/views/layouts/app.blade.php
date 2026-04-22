@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>@yield('title', 'Expense Tracker')</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
             --app-bg: #eef2f7;
@@ -31,6 +31,7 @@
                 radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.08), transparent 30%),
                 var(--app-bg);
             color: var(--text-main);
+            overflow-x: clip;
         }
 
         .app-shell {
@@ -61,9 +62,33 @@
         .sidebar-brand {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 0.7rem;
             padding-bottom: 1.2rem;
             border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar-brand-content {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .sidebar-close-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
         }
 
         .sidebar-brand-icon {
@@ -102,6 +127,7 @@
             border-radius: 18px;
             font-weight: 600;
             transition: all 0.25s ease;
+            position: relative;
         }
 
         .sidebar .nav-link i {
@@ -110,12 +136,19 @@
             font-size: 1rem;
         }
 
-        .sidebar .nav-link:hover,
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background: var(--sidebar-active);
+            transform: translateX(4px);
+            box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.18);
+        }
+
         .sidebar .nav-link.active {
             color: #fff;
             background: var(--sidebar-active);
             transform: translateX(4px);
             box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.18);
+            border-left: 3px solid var(--brand);
         }
 
         .sidebar-user {
@@ -133,6 +166,7 @@
         .main-panel {
             min-width: 0;
             flex: 1;
+            width: 100%;
         }
 
         .topbar {
@@ -142,6 +176,8 @@
             backdrop-filter: blur(14px);
             background: rgba(255, 255, 255, 0.88);
             border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            width: 100%;
+            overflow: hidden;
         }
 
         .topbar-card {
@@ -156,11 +192,17 @@
             font-weight: 700;
             margin-bottom: 0;
             color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .topbar-subtitle {
             font-size: 0.88rem;
             color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .content-wrap {
@@ -173,6 +215,46 @@
             border-radius: 28px;
             box-shadow: var(--shadow-soft);
             padding: 1.5rem;
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        /* Enhanced Table Responsive Styles */
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+        }
+
+        .table-responsive-wrapper table {
+            width: 100%;
+            min-width: 768px;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 767.98px) {
+            .table-responsive-wrapper table {
+                min-width: 600px;
+            }
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: transparent;
+        }
+
+        .table-responsive {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-responsive>.table {
+            min-width: 600px;
         }
 
         .btn-soft {
@@ -319,6 +401,12 @@
                 transform: translateX(-100%);
             }
 
+            .sidebar-close-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
             body.sidebar-open .sidebar {
                 transform: translateX(0);
             }
@@ -334,7 +422,43 @@
 
             .content-card {
                 border-radius: 24px;
-                padding: 1.15rem;
+                padding: 1rem;
+            }
+
+            .topbar-title,
+            .topbar-subtitle {
+                max-width: 200px;
+            }
+
+            .btn-block-mobile {
+                width: 100%;
+                display: block;
+            }
+
+            .form-stack-mobile>* {
+                width: 100%;
+                margin-bottom: 0.75rem;
+            }
+
+            .form-stack-mobile>*:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+
+            .topbar-title,
+            .topbar-subtitle {
+                max-width: 150px;
+            }
+
+            .btn-full-mobile {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .content-card {
+                padding: 0.75rem;
             }
         }
 
@@ -342,6 +466,10 @@
             .sidebar {
                 position: sticky;
                 top: 0;
+            }
+
+            .sidebar-close-btn {
+                display: none !important;
             }
         }
 
@@ -352,124 +480,104 @@
 
     <div class="d-flex app-shell">
         <aside class="sidebar d-flex flex-column p-3 p-lg-4" id="appSidebar">
+
+            {{-- BRAND --}}
             <div class="sidebar-brand mb-4">
-                <span class="sidebar-brand-icon">
-                    <i class="bi bi-wallet2"></i>
-                </span>
-                <div>
-                    <h1 class="h5 fw-bold mb-1">Expense Tracker</h1>
-                    <div class="sidebar-subtitle">Smart admin workspace</div>
+                <div class="sidebar-brand-content">
+                    <span class="sidebar-brand-icon">
+                        <i class="bi bi-wallet2"></i>
+                    </span>
+                    <div>
+                        <h1 class="h5 fw-bold mb-1">Expense Tracker</h1>
+                        <div class="sidebar-subtitle">Smart admin workspace</div>
+                    </div>
                 </div>
+
+                <button class="sidebar-close-btn" id="sidebarCloseBtn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>
 
-            {{-- <div class="sidebar-menu-label">Navigation</div> --}}
+            @php
+            $menus = config('sidebar');
+            @endphp
 
-            <ul class="nav flex-column mb-4">
-                <li class="nav-item">
-                    <a href="{{ auth()->user()->hasRole('manager') ? route('manager.dashboard') : (auth()->user()->hasRole('staff') ? route('staff.dashboard') : route('member.dashboard')) }}" class="nav-link {{ request()->is('*dashboard*') ? 'active' : '' }}">
+            <ul class="nav flex-column mb-4" id="sidebarNav">
 
-                        <i class="bi bi-grid-1x2-fill"></i>
-                        <span>Dashboard</span>
+                @foreach($menus as $menu)
 
-                    </a>
-                </li>
-
-                @if(auth()->check() && auth()->user()->hasRole('manager'))
+                @if(is_null($menu['permission']) || auth()->user()->hasPermission($menu['permission']))
 
                 <li class="nav-item">
-                    <a href="{{ route('roles.index') }}" class="nav-link">
-                        <i class="bi bi-shield-plus"></i>
-                        <span>Create Roles</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ route('permissions.index') }}" class="nav-link">
-                        <i class="bi bi-key"></i>
-                        <span>Create Permissions</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ route('role.permissions.index') }}" class="nav-link">
-                        <i class="bi bi-shield-lock"></i>
-                        <span>Roles & Permissions</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="{{ route('users.index') }}" class="nav-link">
-                        <i class="bi bi-people"></i>
-                        <span>Users</span>
+                    <a href="{{ route($menu['route']) }}" class="nav-link {{ request()->routeIs(...($menu['active'] ?? [$menu['route']])) ? 'active' : '' }}">
+                        <i class="bi {{ $menu['icon'] }}"></i>
+                        <span>{{ $menu['title'] }}</span>
                     </a>
                 </li>
 
                 @endif
 
-                @if(auth()->check() && auth()->user()->hasRole('staff'))
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="bi bi-receipt-cutoff"></i>
-                        <span>Manage Expenses</span>
-                    </a>
-                </li>
-                @endif
-
-                @if(auth()->check() && auth()->user()->hasRole('member'))
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="bi bi-credit-card-2-front-fill"></i>
-                        <span>My Payments</span>
-                    </a>
-                </li>
-                @endif
+                @endforeach
 
             </ul>
 
+            {{-- USER --}}
             @if(auth()->check())
             <div class="sidebar-user">
                 <b>{{ auth()->user()->name }}</b>
             </div>
             @endif
+
         </aside>
 
+        {{-- MAIN --}}
         <div class="main-panel d-flex flex-column">
+
+            {{-- TOPBAR --}}
             <nav class="topbar px-3 px-lg-4 py-3">
                 <div class="topbar-card px-3 px-lg-4 py-3">
-                    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+
                         <div class="d-flex align-items-center gap-3">
-                            <button class="btn btn-soft rounded-circle d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle sidebar">
+                            <button class="btn btn-soft d-lg-none" id="sidebarToggle">
                                 <i class="bi bi-list fs-5"></i>
                             </button>
+
                             <div>
-                                <p class="topbar-title">@yield('page_title', 'Dashboard')</p>
-                                <div class="topbar-subtitle">@yield('page_subtitle', 'Monitor activity and manage your workspace.')</div>
+                                <p class="topbar-title mb-0">
+                                    @yield('page_title', 'Dashboard')
+                                </p>
+                                <div class="topbar-subtitle">
+                                    @yield('page_subtitle', 'Monitor activity')
+                                </div>
                             </div>
                         </div>
 
+                        {{-- LOGOUT --}}
                         @if(auth()->check())
-                        <div class="d-flex align-items-center gap-3 ms-auto">
-
-                            <form method="POST" action="/logout" class="mb-0">
-                                @csrf
-                                <button class="btn btn-danger rounded-pill px-4 shadow-sm">
-                                    Logout
-                                </button>
-                            </form>
-                        </div>
+                        <form method="POST" action="/logout">
+                            @csrf
+                            <button class="btn btn-danger rounded-pill px-4">
+                                Logout
+                            </button>
+                        </form>
                         @endif
+
                     </div>
+
                 </div>
             </nav>
 
+            {{-- CONTENT --}}
             <main class="content-wrap">
                 <div class="content-card">
                     @yield('content')
                 </div>
             </main>
+
         </div>
     </div>
-
     @if(session('success'))
     <script>
         Swal.fire({
@@ -502,18 +610,88 @@
     </script>
     @endif
 
+    <style>
+        .min-width-0 {
+            min-width: 0;
+        }
+
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-responsive table {
+            min-width: 600px;
+            width: 100%;
+        }
+
+        @media (max-width: 767.98px) {
+            .row-cols-mobile-stack>[class*="col-"] {
+                flex: 0 0 100%;
+                max-width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .table-responsive,
+            [class*="table-responsive"] {
+                overflow-x: auto !important;
+            }
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        @media (max-width: 575.98px) {
+            .btn-mobile-full {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+
+            .input-group-mobile-stack {
+                flex-direction: column;
+            }
+
+            .input-group-mobile-stack> :not(:first-child) {
+                margin-top: 0.5rem;
+                border-radius: 0.375rem !important;
+            }
+        }
+
+    </style>
+
     <script>
+        // Sidebar toggle functionality
         const body = document.body;
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+        const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
 
         function closeSidebar() {
             body.classList.remove('sidebar-open');
         }
 
+        function openSidebar() {
+            body.classList.add('sidebar-open');
+        }
+
         if (sidebarToggle) {
-            sidebarToggle.addEventListener('click', function() {
-                body.classList.toggle('sidebar-open');
+            sidebarToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                openSidebar();
+            });
+        }
+
+        if (sidebarCloseBtn) {
+            sidebarCloseBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                closeSidebar();
             });
         }
 
@@ -525,6 +703,15 @@
             if (window.innerWidth >= 992) {
                 closeSidebar();
             }
+        });
+
+        const sidebarLinks = document.querySelectorAll('#sidebarNav .nav-link');
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 992) {
+                    setTimeout(closeSidebar, 150);
+                }
+            });
         });
 
     </script>

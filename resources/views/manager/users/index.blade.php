@@ -33,11 +33,11 @@
                         <td>{{ $user->phone }}</td>
 
                         <td>
-                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-warning"><span class="material-icons">edit</span></a>
 
                             <form action="{{ route('users.delete', $user->id) }}" method="POST" class="d-inline">
                                 @csrf
-                                <button class="btn btn-sm btn-danger">Delete</button>
+                                <button class="btn btn-sm btn-danger"><span class="material-icons">delete</span></button>
                             </form>
                         </td>
                     </tr>

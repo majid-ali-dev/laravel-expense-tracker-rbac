@@ -14,10 +14,14 @@ return new class extends Migration
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
             $table->string('title');
             $table->decimal('amount', 10, 2);
             $table->text('description')->nullable();
             $table->date('date');
+            
+            $table->foreignId('updated_by')->nullable();
+
             $table->timestamps();
         });
     }

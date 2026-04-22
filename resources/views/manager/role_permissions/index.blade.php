@@ -1,10 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Role Permissions')
+@section('title', 'Roles & Permissions')
 
 @section('content')
-
-<h4>Roles</h4>
+<h4>Roles & Permissions</h4>
 
 <table class="table table-bordered">
     <thead>
@@ -15,16 +14,15 @@
             <th>Action</th>
         </tr>
     </thead>
-
     <tbody>
         @foreach($roles as $role)
         <tr>
             <td>{{ $loop->iteration }}</td>
             <td>{{ $role->name }}</td>
-            <td>{{ $role->permissions->count() }}</td>
+            <td>{{ $role->permissions->pluck('name')->join(', ') ?: 'No permissions assigned' }}</td>
             <td>
                 <a href="{{ route('role.permissions.edit', $role->id) }}" class="btn btn-sm btn-primary">
-                    Assign Permissions
+                    <span class="material-icons">edit</span>
                 </a>
             </td>
         </tr>
@@ -33,5 +31,4 @@
 </table>
 
 {{ $roles->links() }}
-
 @endsection

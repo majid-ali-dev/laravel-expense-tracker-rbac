@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Permission;
 use Illuminate\Database\Seeder;
 
@@ -10,15 +9,28 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        Permission::firstOrCreate(['name' => 'manage-users']);
-        Permission::firstOrCreate(['name' => 'assign-roles']);
-        Permission::firstOrCreate(['name' => 'view-all-data']);
+        $permissions = [
 
-        Permission::firstOrCreate(['name' => 'create-expense']);
-        Permission::firstOrCreate(['name' => 'edit-expense']);
-        Permission::firstOrCreate(['name' => 'delete-expense']);
+            // 🔵 USER MANAGEMENT
+            'manage-users',
+            'assign-roles',
+            'view-all-data',
 
-        Permission::firstOrCreate(['name' => 'view-own-data']);
-        Permission::firstOrCreate(['name' => 'pay-bills']);
+            // 🔵 EXPENSE MANAGEMENT
+            'view-expense',
+            'create-expense',
+            'edit-expense',
+            'delete-expense',
+            'download-expense',
+
+            // 🔵 MEMBER FEATURES
+            'view-own-data',
+            'pay-bills',
+
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
     }
 }

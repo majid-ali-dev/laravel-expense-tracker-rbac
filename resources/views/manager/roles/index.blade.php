@@ -7,7 +7,7 @@
     <a href="{{ route('roles.create') }}" class="btn btn-primary">Create Role</a>
 </div>
 
-<table class="table table-bordered">
+<table class="table table-bordered text-center">
     <thead>
         <tr>
             <th>#</th>
@@ -22,11 +22,11 @@
             <td>{{ $loop->iteration }}</td>
             <td>{{ $role->name }}</td>
             <td>
-                <a href="{{ route('roles.edit',$role->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                <a href="{{ route('roles.edit',$role->id) }}" class="btn btn-sm btn-warning"><span class="material-icons">edit</span></a>
 
                 <form action="{{ route('roles.delete',$role->id) }}" method="POST" style="display:inline;">
                     @csrf
-                    <button class="btn btn-sm btn-danger">Delete</button>
+                    <button class="btn btn-sm btn-danger"><span class="material-icons">delete</span></button>
                 </form>
             </td>
         </tr>

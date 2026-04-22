@@ -10,7 +10,10 @@ class CheckRole
     {
         $user = auth()->user();
 
-        // 🔥 SUPER ADMIN BYPASS
+        if (! $user) {
+            abort(403);
+        }
+
         if ($user->hasRole('super_admin')) {
             return $next($request);
         }

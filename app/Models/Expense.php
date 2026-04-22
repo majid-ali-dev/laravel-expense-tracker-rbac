@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
 
 class Expense extends Model
 {
@@ -13,10 +12,21 @@ class Expense extends Model
         'amount',
         'description',
         'date',
+        'updated_by', 
     ];
 
+    protected $casts = [
+        'date' => 'date', 
+    ];
+
+    // relationships
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

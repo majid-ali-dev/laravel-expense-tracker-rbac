@@ -3,8 +3,8 @@
 @section('title', 'Assign Permissions')
 
 @section('content')
-
-<h4>Assign Permissions -> {{ $role->name }}</h4>
+<h4>Assign Permissions to Role</h4>
+<p><strong>Role:</strong> {{ $role->name }}</p>
 
 <form method="POST" action="{{ route('role.permissions.update', $role->id) }}">
     @csrf
@@ -17,7 +17,6 @@
                 <th>Select</th>
             </tr>
         </thead>
-
         <tbody>
             @foreach($permissions as $permission)
             <tr>
@@ -36,8 +35,7 @@
         </tbody>
     </table>
 
-    <button class="btn btn-success">Save</button>
+    <button type="submit" class="btn btn-success">Save</button>
     <a href="{{ route('role.permissions.index') }}" class="btn btn-secondary">Back</a>
 </form>
-
 @endsection
