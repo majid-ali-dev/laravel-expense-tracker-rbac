@@ -28,16 +28,22 @@
         <label class="form-label">Email Address</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="Enter your email">
+            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="Enter your email">
         </div>
+        @error('email')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="mb-4">
         <label class="form-label">Password</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input type="password" name="password" class="form-control" placeholder="Enter your password">
+            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Enter your password">
         </div>
+        @error('password')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="d-grid mb-4">

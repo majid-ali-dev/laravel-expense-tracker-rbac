@@ -28,32 +28,44 @@
         <label class="form-label">Full Name</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-person"></i></span>
-            <input type="text" name="name" class="form-control" value="{{ old('name') }}" placeholder="Enter your full name">
+            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" placeholder="Enter your full name">
         </div>
+        @error('name')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="mb-3">
         <label class="form-label">Email Address</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" name="email" class="form-control" value="{{ old('email') }}" placeholder="Enter your email">
+            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="Enter your email">
         </div>
+        @error('email')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="mb-3">
         <label class="form-label">Password</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-lock"></i></span>
-            <input type="password" name="password" class="form-control" placeholder="Create a password">
+            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Create a password">
         </div>
+        @error('password')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="mb-4">
         <label class="form-label">Phone</label>
         <div class="input-group">
             <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-            <input type="phone" name="phone" class="form-control" placeholder="Enter your phone number">
+            <input type="phone" name="phone" value="{{ old('phone') }}" class="form-control @error('phone') is-invalid @enderror" placeholder="Enter your phone number">
         </div>
+        @error('phone')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
     </div>
 
     <div class="d-grid mb-4">

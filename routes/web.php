@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
@@ -46,6 +47,9 @@ Route::middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role.permissions.index');
     Route::get('/role-permissions/{role}', [RolePermissionController::class, 'edit'])->name('role.permissions.edit');
     Route::post('/role-permissions/{role}', [RolePermissionController::class, 'update'])->name('role.permissions.update');
+
+    Route::get('/manager/payments/create', [PaymentController::class, 'create'])->name('payments.create');
+    Route::post('/manager/payments/store', [PaymentController::class, 'storeByManager'])->name('payments.store.manager');
 });
 
 Route::middleware('auth')->group(function () {
@@ -60,6 +64,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/expenses/{id}/update', [ExpenseController::class, 'update'])->name('expenses.update');
     Route::post('/expenses/{id}/delete', [ExpenseController::class, 'delete'])->name('expenses.delete');
     Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->name('expenses.show');
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+});
+
+Route::middleware(['auth', 'role:member'])->group(function () {
+    Route::post('/payments/pay/{id}', [PaymentController::class, 'pay'])->name('payments.pay');
 });
 
 Route::fallback(function () {

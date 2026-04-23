@@ -13,13 +13,28 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
+
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->decimal('amount', 10, 2);
+
+            // Total required amount (e.g. 500)
+            $table->decimal('total_amount', 10, 2);
+
+            // Paid amount (e.g. 300)
+            $table->decimal('paid_amount', 10, 2)->default(0);
+
+            // Remaining auto (optional store OR calculate)
+            $table->decimal('remaining_amount', 10, 2)->default(0);
+
+            // Status (dynamic)
+            $table->enum('status', ['unpaid', 'partial', 'paid'])->default('unpaid');
+
             $table->enum('month', [
                 'jan', 'feb', 'mar', 'apr', 'may', 'jun',
                 'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
             ]);
-            $table->enum('status', ['pending', 'paid'])->default('pending');
+
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+
             $table->timestamps();
         });
     }

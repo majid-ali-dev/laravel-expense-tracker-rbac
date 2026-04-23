@@ -8,7 +8,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
             --app-bg: #eef2f7;
@@ -152,11 +151,77 @@
         }
 
         .sidebar-user {
-            margin-top: auto;
-            padding: 5px;
-            border-radius: 12px;
+            padding: 0.85rem;
+            border-radius: 18px;
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-user-toggle {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            color: #fff;
+            padding: 0;
+        }
+
+        .sidebar-user-toggle:focus-visible {
+            outline: 2px solid rgba(96, 165, 250, 0.75);
+            outline-offset: 4px;
+        }
+
+        .sidebar-user-avatar {
+            width: 46px;
+            height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.95), rgba(37, 99, 235, 0.95));
+            color: #fff;
+            font-weight: 800;
+            font-size: 1rem;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+        }
+
+        .sidebar-user-name {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .sidebar-user-role {
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 0.82rem;
+        }
+
+        .sidebar-user-menu {
+            margin-bottom: 0.85rem;
+            padding-bottom: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            inset: auto 0 100% 0 !important;
+            transform: none !important;
+        }
+
+        .sidebar-user-menu .dropdown-item {
+            border-radius: 12px;
+            color: #e2e8f0;
+            font-weight: 600;
+            padding: 0.7rem 0.85rem;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar-user-menu .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .sidebar-user-menu .dropdown-item.text-danger {
+            color: #fca5a5 !important;
+        }
+
+        .sidebar-user-menu .dropdown-item.text-danger:hover {
+            color: #fff !important;
+            background: rgba(239, 68, 68, 0.35);
         }
 
         .sidebar-user small {
@@ -349,6 +414,43 @@
             margin-bottom: 0;
         }
 
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+
+        .page-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: nowrap;
+        }
+
+        .inline-form {
+            display: inline-block;
+            margin: 0;
+        }
+
+        .field-label-cell {
+            width: 100px;
+        }
+
+        .actions-column {
+            width: 150px;
+        }
+
         .list-clean {
             list-style: none;
             padding-left: 0;
@@ -435,6 +537,14 @@
                 display: block;
             }
 
+            .page-actions {
+                width: 100%;
+            }
+
+            .page-actions>* {
+                flex: 1 1 auto;
+            }
+
             .form-stack-mobile>* {
                 width: 100%;
                 margin-bottom: 0.75rem;
@@ -476,6 +586,15 @@
     </style>
 </head>
 <body>
+    @php
+    $currentUser = auth()->user();
+    $currentUserRoles = $currentUser ? $currentUser->roleNames()->map(fn ($role) => str_replace('_', ' ', $role))->map(fn ($role) => \Illuminate\Support\Str::title($role))->join(', ') : '';
+    $nameParts = $currentUser ? collect(preg_split('/\s+/', trim($currentUser->name)))->filter()->values() : collect();
+    $firstInitial = $nameParts->isNotEmpty() ? strtoupper(substr($nameParts->first(), 0, 1)) : '';
+    $lastInitial = $nameParts->count() > 1 ? strtoupper(substr($nameParts->last(), 0, 1)) : '';
+    $currentUserInitial = $firstInitial . $lastInitial;
+    @endphp
+
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <div class="d-flex app-shell">
@@ -497,7 +616,6 @@
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-
             @php
             $menus = config('sidebar');
             @endphp
@@ -521,10 +639,25 @@
 
             </ul>
 
-            {{-- USER --}}
-            @if(auth()->check())
-            <div class="sidebar-user">
-                <b>{{ auth()->user()->name }}</b>
+            @if($currentUser)
+            <div class="sidebar-user dropdown mt-auto">
+                <button class="sidebar-user-toggle dropdown-toggle d-flex align-items-center gap-3 text-start" id="sidebarUserToggle" type="button" aria-expanded="false">
+                    <span class="sidebar-user-avatar">{{ $currentUserInitial }}</span>
+                    <span class="min-width-0">
+                        <span class="sidebar-user-name d-block text-truncate">{{ $currentUser->name }}</span>
+                        <small class="sidebar-user-role d-block text-truncate">{{ $currentUserRoles ?: 'User' }}</small>
+                    </span>
+                </button>
+
+                <div class="sidebar-user-menu dropdown-menu dropdown-menu-dark border-0 shadow-sm w-100" aria-labelledby="sidebarUserToggle">
+                    <form method="POST" action="/logout">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
             </div>
             @endif
 
@@ -554,16 +687,6 @@
                             </div>
                         </div>
 
-                        {{-- LOGOUT --}}
-                        @if(auth()->check())
-                        <form method="POST" action="/logout">
-                            @csrf
-                            <button class="btn btn-danger rounded-pill px-4">
-                                Logout
-                            </button>
-                        </form>
-                        @endif
-
                     </div>
 
                 </div>
@@ -572,6 +695,16 @@
             {{-- CONTENT --}}
             <main class="content-wrap">
                 <div class="content-card">
+                    @if ($errors->any())
+                    <div class="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
+                        <ul class="mb-0 ps-3">
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+
                     @yield('content')
                 </div>
             </main>
@@ -664,6 +797,74 @@
             }
         }
 
+        /* Custom Timeline Styles */
+        .timeline-wrapper {
+            position: relative;
+            padding-left: 0;
+        }
+
+        .timeline-item {
+            position: relative;
+        }
+
+        .timeline-item:not(:last-child) {
+            margin-bottom: 1rem;
+        }
+
+        /* Card Hover Effect */
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Table Styles */
+        .table-borderless td {
+            border: none;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .card-header {
+                padding: 1rem !important;
+            }
+
+            .card-body {
+                padding: 1rem !important;
+            }
+
+            .badge {
+                font-size: 0.75rem;
+            }
+
+            h3 {
+                font-size: 1.35rem;
+            }
+        }
+
+        /* Custom Badge Colors */
+        .bg-opacity-10 {
+            --bs-bg-opacity: 0.1;
+        }
+
+        .text-decoration-line-through {
+            text-decoration: line-through;
+        }
+
+        /* Smooth Animations */
+        .rounded-4 {
+            border-radius: 1rem !important;
+        }
+
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
     </style>
 
     <script>
@@ -672,6 +873,8 @@
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarBackdrop = document.getElementById('sidebarBackdrop');
         const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+        const sidebarUserToggle = document.getElementById('sidebarUserToggle');
+        const sidebarUserMenu = document.querySelector('.sidebar-user-menu');
 
         function closeSidebar() {
             body.classList.remove('sidebar-open');
@@ -699,6 +902,33 @@
             sidebarBackdrop.addEventListener('click', closeSidebar);
         }
 
+        function closeSidebarUserMenu() {
+            if (sidebarUserMenu && sidebarUserToggle) {
+                sidebarUserMenu.classList.remove('show');
+                sidebarUserToggle.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        if (sidebarUserToggle && sidebarUserMenu) {
+            sidebarUserToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = sidebarUserMenu.classList.toggle('show');
+                sidebarUserToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!sidebarUserMenu.contains(e.target) && !sidebarUserToggle.contains(e.target)) {
+                    closeSidebarUserMenu();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeSidebarUserMenu();
+                }
+            });
+        }
+
         window.addEventListener('resize', function() {
             if (window.innerWidth >= 992) {
                 closeSidebar();
@@ -711,9 +941,12 @@
                 if (window.innerWidth < 992) {
                     setTimeout(closeSidebar, 150);
                 }
+                closeSidebarUserMenu();
             });
         });
 
     </script>
+
+    @stack('scripts')
 </body>
 </html>

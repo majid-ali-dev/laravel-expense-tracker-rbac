@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class RoleController extends Controller
 {
@@ -24,12 +25,17 @@ class RoleController extends Controller
     // Store new role
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|unique:roles,name',
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
+        ], [
+            'name.required' => 'Role name field is required.',
+            'name.string' => 'Role name must be a valid text value.',
+            'name.max' => 'Role name may not be greater than 255 characters.',
+            'name.unique' => 'This role already exists.',
         ]);
 
         Role::create([
-            'name' => $request->name,
+            'name' => $validated['name'],
         ]);
 
         return redirect()->route('roles.index')->with('success', 'Role Created');
@@ -46,13 +52,17 @@ class RoleController extends Controller
     // Update role
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|unique:roles,name,'.$id,
-        ]);
-
         $role = Role::findOrFail($id);
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($role->id)],
+        ], [
+            'name.required' => 'Role name field is required.',
+            'name.string' => 'Role name must be a valid text value.',
+            'name.max' => 'Role name may not be greater than 255 characters.',
+            'name.unique' => 'This role already exists.',
+        ]);
         $role->update([
-            'name' => $request->name,
+            'name' => $validated['name'],
         ]);
 
         return redirect()->route('roles.index')->with('success', 'Role Updated');

@@ -13,42 +13,30 @@ class RolePermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        // 🔴 SUPER ADMIN (ALL PERMISSIONS)
+        $allPermissionIds = Permission::query()->pluck('id')->all();
+
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
-        $superAdmin->permissions()->sync(Permission::all()->pluck('id'));
+        $superAdmin->permissions()->sync($allPermissionIds);
 
-        // 🟢 MANAGER
         $manager = Role::firstOrCreate(['name' => 'manager']);
-        $manager->permissions()->sync(
-            Permission::whereIn('name', [
-                'manage-users',
-                'assign-roles',
-                'view-all-data',
-                'view-expense',
-                'create-expense',
-                'edit-expense',
-                'delete-expense',
-                'download-expense',
-            ])->pluck('id')
-        );
+        $manager->permissions()->sync($allPermissionIds);
 
-        // 🔵 STAFF
         $staff = Role::firstOrCreate(['name' => 'staff']);
         $staff->permissions()->sync(
-            Permission::whereIn('name', [
+            Permission::query()->whereIn('name', [
+                'view-expense',
                 'create-expense',
                 'edit-expense',
-                'view-expense',
-            ])->pluck('id')
+            ])->pluck('id')->all()
         );
 
-        // 🟡 MEMBER
         $member = Role::firstOrCreate(['name' => 'member']);
         $member->permissions()->sync(
-            Permission::whereIn('name', [
+            Permission::query()->whereIn('name', [
                 'view-own-data',
+                'view-payment',
                 'pay-bills',
-            ])->pluck('id')
+            ])->pluck('id')->all()
         );
     }
 }

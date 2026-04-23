@@ -4,34 +4,37 @@
 
 <div class="container expenses-page">
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap expenses-toolbar">
+    <div class="page-header expenses-toolbar">
         <h4 class="expenses-title">Expenses</h4>
 
-        <div class="expenses-actions">
+        <div class="page-actions expenses-actions">
 
             @if(auth()->user()->hasPermission('create-expense'))
-            <a href="{{ route('expenses.create') }}" class="btn btn-dark" title="Add">
-                <span class="material-icons">+</span>
+            <a href="{{ route('expenses.create') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" title="Add">
+                <i class="bi bi-plus-lg"></i>
+                <span>Add</span>
             </a>
             @endif
 
             @if(auth()->user()->hasPermission('download-expense'))
-            <a href="{{ route('expenses.download') }}" class="btn btn-success" title="Download">
-                <span class="material-icons">download</span>
+            <a href="{{ route('expenses.download') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" title="Download">
+                <i class="bi bi-download"></i>
+                <span>Download</span>
             </a>
             @endif
 
             @if(auth()->user()->hasRole('manager') || auth()->user()->hasRole('super_admin'))
-            <a href="{{ route('expenses.history') }}" class="btn btn-secondary" title="View History">
-                <span class="material-icons">history</span>
+            <a href="{{ route('expenses.history') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" title="View History">
+                <i class="bi bi-clock-history"></i>
+                <span>History</span>
             </a>
             @endif
 
         </div>
     </div>
 
-    <div class="table-responsive-wrapper">
-        <table class="table table-bordered expense-table mt-2">
+    <div class="table-responsive mt-2">
+        <table class="table table-bordered text-center align-middle expense-table">
             <thead>
                 <tr>
                     <th>#</th>
@@ -54,19 +57,19 @@
                     <td>{{ $expense->date }}</td>
                     <td class="expense-description">{{ $expense->description }}</td>
                     <td>
-                        <div class="expense-actions-inner" style="display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-wrap:nowrap;">
+                        <div class="action-group expense-actions-inner">
 
                             {{-- VIEW --}}
                             @if(auth()->user()->hasPermission('view-expense'))
-                            <a href="{{ route('expenses.show', $expense->id) }}" class="btn btn-sm btn-light border" title="View">
-                                <span class="material-icons">visibility</span>
+                            <a href="{{ route('expenses.show', $expense->id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" title="View">
+                                <i class="bi bi-eye"></i>
                             </a>
                             @endif
 
                             {{-- EDIT --}}
                             @if(auth()->user()->hasPermission('edit-expense'))
-                            <a href="{{ route('expenses.edit', $expense->id) }}" class="btn btn-sm btn-light border" title="Edit">
-                                <span class="material-icons">edit</span>
+                            <a href="{{ route('expenses.edit', $expense->id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
                             </a>
                             @endif
 
@@ -74,8 +77,8 @@
                             @if(auth()->user()->hasPermission('delete-expense'))
                             <form action="{{ route('expenses.delete', $expense->id) }}" method="POST" onsubmit="return confirm('Delete this expense?')">
                                 @csrf
-                                <button class="btn btn-sm btn-light border text-danger" title="Delete">
-                                    <span class="material-icons">delete</span>
+                                <button class="btn btn-sm btn-outline-secondary text-danger d-inline-flex align-items-center gap-2" title="Delete">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </form>
                             @endif

@@ -28,6 +28,10 @@ class RolePermissionController extends Controller
         $validated = $request->validate([
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['integer', 'exists:permissions,id'],
+        ], [
+            'permissions.array' => 'Permissions selection is invalid.',
+            'permissions.*.integer' => 'Each selected permission must be valid.',
+            'permissions.*.exists' => 'One or more selected permissions are invalid.',
         ]);
 
         $role->permissions()->sync($validated['permissions'] ?? []);

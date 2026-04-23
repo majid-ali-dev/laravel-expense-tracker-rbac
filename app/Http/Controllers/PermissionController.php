@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PermissionController extends Controller
 {
@@ -24,12 +25,17 @@ class PermissionController extends Controller
     // Store new permission
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|unique:permissions,name',
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:permissions,name'],
+        ], [
+            'name.required' => 'Permission name field is required.',
+            'name.string' => 'Permission name must be a valid text value.',
+            'name.max' => 'Permission name may not be greater than 255 characters.',
+            'name.unique' => 'This permission already exists.',
         ]);
 
         Permission::create([
-            'name' => $request->name,
+            'name' => $validated['name'],
         ]);
 
         return redirect()->route('permissions.index')->with('success', 'Permission Created');
@@ -46,13 +52,17 @@ class PermissionController extends Controller
     // Update permission
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|unique:permissions,name,'.$id,
-        ]);
-
         $permission = Permission::findOrFail($id);
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')->ignore($permission->id)],
+        ], [
+            'name.required' => 'Permission name field is required.',
+            'name.string' => 'Permission name must be a valid text value.',
+            'name.max' => 'Permission name may not be greater than 255 characters.',
+            'name.unique' => 'This permission already exists.',
+        ]);
         $permission->update([
-            'name' => $request->name,
+            'name' => $validated['name'],
         ]);
 
         return redirect()->route('permissions.index')->with('success', 'Permission Updated');

@@ -11,7 +11,11 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // SUPER ADMIN
+        $superAdminRoleId = Role::where('name', 'super_admin')->value('id');
+        $managerRoleId = Role::where('name', 'manager')->value('id');
+        $staffRoleId = Role::where('name', 'staff')->value('id');
+        $memberRoleId = Role::where('name', 'member')->value('id');
+
         $majid = User::firstOrCreate(
             ['email' => 'majidalishar2@gmail.com'],
             [
@@ -20,9 +24,11 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345'),
             ]
         );
-        $majid->roles()->attach(Role::where('name', 'super_admin')->first());
 
-        // MANAGER
+        if ($superAdminRoleId) {
+            $majid->roles()->syncWithoutDetaching([$superAdminRoleId]);
+        }
+
         $nadeem = User::firstOrCreate(
             ['email' => 'nadeem@gmail.com'],
             [
@@ -31,9 +37,11 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345'),
             ]
         );
-        $nadeem->roles()->attach(Role::where('name', 'manager')->first());
 
-        // STAFF
+        if ($managerRoleId) {
+            $nadeem->roles()->syncWithoutDetaching([$managerRoleId]);
+        }
+
         $shahid = User::firstOrCreate(
             ['email' => 'shahid@gmail.com'],
             [
@@ -42,9 +50,11 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345'),
             ]
         );
-        $shahid->roles()->attach(Role::where('name', 'staff')->first());
 
-        // MEMBER 1
+        if ($staffRoleId) {
+            $shahid->roles()->syncWithoutDetaching([$staffRoleId]);
+        }
+
         $naseer = User::firstOrCreate(
             ['email' => 'naseer@gmail.com'],
             [
@@ -53,9 +63,11 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345'),
             ]
         );
-        $naseer->roles()->attach(Role::where('name', 'member')->first());
 
-        // MEMBER 2
+        if ($memberRoleId) {
+            $naseer->roles()->syncWithoutDetaching([$memberRoleId]);
+        }
+
         $qamber = User::firstOrCreate(
             ['email' => 'qamber@gmail.com'],
             [
@@ -64,6 +76,9 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('12345'),
             ]
         );
-        $qamber->roles()->attach(Role::where('name', 'member')->first());
+
+        if ($memberRoleId) {
+            $qamber->roles()->syncWithoutDetaching([$memberRoleId]);
+        }
     }
 }

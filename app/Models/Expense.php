@@ -29,4 +29,9 @@ class Expense extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    public function histories()
+    {
+        return $this->hasMany(ExpenseHistory::class);
+    }
 }

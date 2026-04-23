@@ -23,13 +23,16 @@ class PermissionSeeder extends Seeder
             'delete-expense',
             'download-expense',
 
+            // 🔵 PAYMENT MANAGEMENT
+            'create-payment',
+            'view-payment',
+
             // 🔵 MEMBER FEATURES
             'view-own-data',
             'pay-bills',
-
         ];
 
-        foreach ($permissions as $permission) {
+        foreach (array_unique($permissions) as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
     }
