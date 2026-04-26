@@ -43,6 +43,69 @@
         </div>
     </div>
 
+    <!-- Member Payment Details Section -->
+    @if($user->hasRole('member') && !empty($paymentData))
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="section-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="section-title mb-0">Your Payment Summary</h2>
+                    <i class="bi bi-credit-card fs-4 text-primary"></i>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="bg-light rounded-3 p-3 text-center">
+                            <small class="text-muted d-block">Total Amount</small>
+                            <h4 class="mb-0 text-primary">Rs {{ number_format($paymentData['total_amount'] ?? 0, 2) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-light rounded-3 p-3 text-center">
+                            <small class="text-muted d-block">Total Paid</small>
+                            <h4 class="mb-0 text-success">Rs {{ number_format($paymentData['total_paid'] ?? 0, 2) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-light rounded-3 p-3 text-center">
+                            <small class="text-muted d-block">Remaining</small>
+                            <h4 class="mb-0 text-warning">Rs {{ number_format($paymentData['remaining'] ?? 0, 2) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-light rounded-3 p-3 text-center">
+                            <small class="text-muted d-block">Payment Status</small>
+                            @php
+                            $statusBadge = [
+                            'paid' => 'bg-success',
+                            'partial' => 'bg-warning',
+                            'unpaid' => 'bg-danger',
+                            ];
+                            @endphp
+                            <h4 class="mb-0">
+                                <span class="badge {{ $statusBadge[$paymentData['payment_status'] ?? 'unpaid'] }}">
+                                    {{ ucfirst($paymentData['payment_status'] ?? 'Unpaid') }}
+                                </span>
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+                @if(($paymentData['payment_count'] ?? 0) > 0)
+                <div class="mt-3 pt-2 border-top">
+                    <small class="text-muted">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Total payments made: {{ $paymentData['payment_count'] }} times
+                        @if($paymentData['last_payment'])
+                        | Last payment: {{ $paymentData['last_payment']->created_at->format('d-m-Y') }}
+                        @endif
+                    </small>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="section-card">
@@ -87,6 +150,17 @@
                         </div>
                     </li>
                     @endif
+
+                    <!-- Member specific quick access -->
+                    @if($user->hasRole('member'))
+                    <li>
+                        <span class="bullet-soft"><i class="bi bi-credit-card"></i></span>
+                        <div>
+                            <div class="fw-semibold">My Payments</div>
+                            <div class="section-text">View your payment history and track your dues.</div>
+                        </div>
+                    </li>
+                    @endif
                 </ul>
             </div>
         </div>
@@ -106,6 +180,14 @@
 
                 @if($canDownloadExpenses)
                 <p class="section-text mt-3 mb-0">You can also export expense data from the expenses page.</p>
+                @endif
+
+                <!-- Member specific info -->
+                @if($user->hasRole('member'))
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    As a member, you can view your own expenses and track your payment status.
+                </div>
                 @endif
             </div>
         </div>

@@ -26,6 +26,19 @@ class DashboardController extends Controller
             ? (clone $expenseQuery)->sum('amount')
             : 0;
 
+        // Member specific data
+        $paymentData = [];
+        if ($user->hasRole('member')) {
+            $paymentData = [
+                'total_amount' => $user->total_amount ?? 0,
+                'total_paid' => $user->total_paid ?? 0,
+                'remaining' => $user->remaining ?? 0,
+                'payment_status' => $user->payment_status ?? 'unpaid',
+                'last_payment' => $user->payments()->latest()->first(),
+                'payment_count' => $user->payments()->count(),
+            ];
+        }
+
         return view('dashboard.index', [
             'user' => $user,
             'roleNames' => $roleNames,
@@ -37,6 +50,7 @@ class DashboardController extends Controller
             'canDownloadExpenses' => $user->hasPermission('download-expense'),
             'expenseCount' => $expenseCount,
             'totalAmount' => $totalAmount,
+            'paymentData' => $paymentData,
         ]);
     }
 }
