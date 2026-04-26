@@ -645,7 +645,7 @@
                     <span class="sidebar-user-avatar">{{ $currentUserInitial }}</span>
                     <span class="min-width-0">
                         <span class="sidebar-user-name d-block text-truncate">{{ $currentUser->name }}</span>
-                        <small class="sidebar-user-role d-block text-truncate">{{ $currentUserRoles ?: 'User' }}</small>
+                        {{-- <small class="sidebar-user-role d-block text-truncate">{{ $currentUserRoles ?: 'User' }}</small> --}}
                     </span>
                 </button>
 

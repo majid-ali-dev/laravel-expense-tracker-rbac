@@ -5,126 +5,208 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class PaymentController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $authUser = auth()->user();
 
-        if (! $user->hasPermission('view-payment')) {
+        if (! $authUser->hasPermission('view-payment')) {
             abort(403);
         }
 
-        if ($user->hasRole('manager') || $user->hasRole('super_admin')) {
-            $payments = Payment::with('user')->latest()->get();
+        if ($authUser->hasRole('manager') || $authUser->hasRole('super_admin')) {
+            $users = $this->paymentUsers();
 
-            $totalAmount = $payments->sum('total_amount');
-            $totalPaid = $payments->sum('paid_amount');
-            $totalRemaining = $payments->sum('remaining_amount');
-
-            $paidCount = $payments->where('status', 'paid')->count();
-            $unpaidCount = $payments->where('status', 'unpaid')->count();
+            $totalAmount = $users->sum(fn (User $user) => (float) $user->total_amount);
+            $totalPaid = $users->sum(fn (User $user) => (float) $user->total_paid);
+            $totalRemaining = $users->sum(fn (User $user) => (float) $user->remaining);
+            $paidCount = $users->where('payment_status', 'paid')->count();
+            $partialCount = $users->where('payment_status', 'partial')->count();
+            $unpaidCount = $users->where('payment_status', 'unpaid')->count();
 
             return view('manager.payments.index', compact(
-                'payments',
+                'users',
                 'totalAmount',
                 'totalPaid',
                 'totalRemaining',
                 'paidCount',
+                'partialCount',
                 'unpaidCount'
             ));
         }
 
-        $payments = Payment::where('user_id', $user->id)->get();
-
-        return view('member.payments.index', compact('payments'));
-    }
-
-    public function createPayment(Request $request)
-    {
-        if (! auth()->user()->hasPermission('create-payment')) {
-            abort(403);
-        }
-
-        Payment::create([
-            'user_id' => $request->user_id,
-            'total_amount' => $request->total_amount,
-            'remaining_amount' => $request->total_amount,
-            'month' => $request->month,
+        $user = $authUser->load([
+            'payments' => fn ($query) => $query
+                ->select('id', 'user_id', 'paid_amount', 'month', 'updated_by', 'created_at')
+                ->latest(),
         ]);
 
-        return back()->with('success', 'Payment Assigned');
+        return view('member.payments.index', compact('user'));
     }
 
-    public function pay(Request $request, $id)
+    public function addPayment(User $user)
     {
-        $user = auth()->user();
+        $this->authorizePaymentChange();
 
-        if (! $user->hasPermission('pay-bills') && ! $user->hasRole('manager') && ! $user->hasRole('super_admin')) {
-            abort(403);
+        // Check if user has total_amount set
+        if ($user->total_amount <= 0) {
+            return redirect()->route('payments.index')
+                ->with('error', 'This user has no total amount assigned. Please set total amount first.');
         }
 
-        $paymentQuery = Payment::query();
+        $user->load('payments');
+        $user->total_paid = $user->payments()->sum('paid_amount');
+        $user->remaining = $user->total_amount - $user->total_paid;
 
-        if (! $user->hasRole('manager') && ! $user->hasRole('super_admin')) {
-            $paymentQuery->where('user_id', $user->id);
-        }
+        return view('manager.payments.add_pay', compact('user'));
+    }
 
-        $payment = $paymentQuery->findOrFail($id);
+    public function pay(Request $request, User $user)
+    {
+        $this->authorizePaymentChange();
 
-        $payAmount = $request->amount;
+        $data = $request->validate([
+            'paid_amount' => ['required', 'numeric', 'gt:0', 'max:'.$user->remaining],
+        ], [
+            'paid_amount.required' => 'Payment amount is required.',
+            'paid_amount.numeric' => 'Payment amount must be a number.',
+            'paid_amount.gt' => 'Payment amount must be greater than 0.',
+            'paid_amount.max' => 'Payment amount cannot exceed remaining balance of Rs '.number_format($user->remaining, 2),
+        ]);
 
-        $newPaid = $payment->paid_amount + $payAmount;
-        $remaining = $payment->total_amount - $newPaid;
+        $paidAmount = (float) $data['paid_amount'];
 
-        if ($newPaid <= 0) {
-            $status = 'unpaid';
-        } elseif ($newPaid < $payment->total_amount) {
-            $status = 'partial';
-        } else {
-            $status = 'paid';
-            $remaining = 0;
-        }
-
-        $payment->update([
-            'paid_amount' => $newPaid,
-            'remaining_amount' => $remaining,
-            'status' => $status,
+        Payment::create([
+            'user_id' => $user->id,
+            'paid_amount' => $paidAmount,
+            'month' => strtolower(now()->format('M')),
             'updated_by' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Payment Updated');
-    }
+        // Calculate new totals
+        $totalPaid = $user->payments()->sum('paid_amount');
+        $remaining = $user->total_amount - $totalPaid;
 
-    public function create()
-    {
-        if (! auth()->user()->hasPermission('create-payment')) {
-            abort(403);
+        // Auto update status based on remaining
+        if ($remaining <= 0) {
+            $status = 'paid';
+        } elseif ($totalPaid > 0 && $remaining > 0) {
+            $status = 'partial';
+        } else {
+            $status = 'unpaid';
         }
 
-        $users = User::whereHas('roles', function ($q) {
-            $q->where('name', 'member');
-        })->get();
-
-        return view('manager.payments.create', compact('users'));
-    }
-
-    public function storeByManager(Request $request)
-    {
-        if (! auth()->user()->hasPermission('create-payment')) {
-            abort(403);
-        }
-
-        Payment::create([
-            'user_id' => $request->user_id,
-            'total_amount' => $request->total_amount,
-            'paid_amount' => 0,
-            'remaining_amount' => $request->total_amount,
-            'month' => $request->month,
-            'status' => 'unpaid',
+        // Update user's total_paid, remaining, payment_status
+        $user->update([
+            'total_paid' => $totalPaid,
+            'remaining' => $remaining,
+            'payment_status' => $status,
         ]);
 
-        return redirect()->back()->with('success', 'Payment Assigned to User');
+        return redirect()->route('payments.index')->with('success', 'Payment added successfully.');
+    }
+
+    public function destroy(Payment $payment)
+    {
+        $this->authorizePaymentChange();
+
+        $user = $payment->user;
+        $payment->delete();
+
+        // Recalculate totals after deletion
+        $totalPaid = $user->payments()->sum('paid_amount');
+        $remaining = $user->total_amount - $totalPaid;
+
+        // Update status based on remaining
+        if ($remaining <= 0) {
+            $status = 'paid';
+        } elseif ($totalPaid > 0 && $remaining > 0) {
+            $status = 'partial';
+        } else {
+            $status = 'unpaid';
+        }
+
+        $user->update([
+            'total_paid' => $totalPaid,
+            'remaining' => $remaining,
+            'payment_status' => $status,
+        ]);
+
+        return back()->with('success', 'Payment record deleted successfully.');
+    }
+
+    public function update(Request $request, Payment $payment)
+    {
+        $this->authorizePaymentChange();
+
+        $data = $request->validate([
+            'paid_amount' => ['required', 'numeric', 'gt:0'],
+        ], [
+            'paid_amount.required' => 'Payment amount is required.',
+            'paid_amount.numeric' => 'Payment amount must be a number.',
+            'paid_amount.gt' => 'Payment amount must be greater than 0.',
+        ]);
+
+        $payment->loadMissing('user');
+
+        $paidAmount = (float) $data['paid_amount'];
+        $allowedLimit = (float) $payment->user->remaining + (float) $payment->paid_amount;
+
+        if ($paidAmount > $allowedLimit) {
+            throw ValidationException::withMessages([
+                'paid_amount' => 'Updated amount cannot exceed the remaining balance for this user.',
+            ]);
+        }
+
+        $payment->update([
+            'paid_amount' => $paidAmount,
+            'updated_by' => auth()->id(),
+        ]);
+
+        // Recalculate totals
+        $user = $payment->user;
+        $totalPaid = $user->payments()->sum('paid_amount');
+        $remaining = $user->total_amount - $totalPaid;
+
+        // Update status
+        if ($remaining <= 0) {
+            $status = 'paid';
+        } elseif ($totalPaid > 0 && $remaining > 0) {
+            $status = 'partial';
+        } else {
+            $status = 'unpaid';
+        }
+
+        $user->update([
+            'total_paid' => $totalPaid,
+            'remaining' => $remaining,
+            'payment_status' => $status,
+        ]);
+
+        return back()->with('success', 'Payment updated successfully.');
+    }
+
+    private function authorizePaymentChange(): void
+    {
+        if (! auth()->user()->hasPermission('create-payment')) {
+            abort(403);
+        }
+    }
+
+    private function paymentUsers()
+    {
+        return User::query()
+            ->whereHas('roles', fn ($query) => $query->where('name', 'member'))
+            ->where('total_amount', '>', 0)
+            ->with([
+                'payments' => fn ($query) => $query
+                    ->select('id', 'user_id', 'paid_amount', 'month', 'updated_by', 'created_at')
+                    ->latest(),
+            ])
+            ->orderBy('name')
+            ->simplePaginate(5); // Using simplePaginate(5)
     }
 }

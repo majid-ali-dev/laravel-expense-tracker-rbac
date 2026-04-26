@@ -8,18 +8,13 @@ class Payment extends Model
 {
     protected $fillable = [
         'user_id',
-        'total_amount',
         'paid_amount',
-        'remaining_amount',
-        'status',
         'month',
         'updated_by',
     ];
 
     protected $casts = [
-        'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
-        'remaining_amount' => 'decimal:2',
     ];
 
     // 🔵 Member (jis ne payment deni hai)

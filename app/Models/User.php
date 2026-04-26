@@ -15,6 +15,12 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'total_amount',
+        'status',
+    ];
+
+    protected $casts = [
+        'total_amount' => 'decimal:2',
     ];
 
     public function expenses()
@@ -64,5 +70,31 @@ class User extends Authenticatable
             ->filter()
             ->unique()
             ->values();
+    }
+
+    public function getTotalPaidAttribute()
+    {
+        if ($this->relationLoaded('payments')) {
+            return (float) $this->payments->sum('paid_amount');
+        }
+
+        return (float) $this->payments()->sum('paid_amount');
+    }
+
+    public function getRemainingAttribute()
+    {
+        return max(0, (float) $this->total_amount - (float) $this->total_paid);
+    }
+
+    public function getPaymentStatusAttribute()
+    {
+        if ((float) $this->total_paid === 0.0) {
+            return 'unpaid';
+        }
+        if ((float) $this->total_paid < (float) $this->total_amount) {
+            return 'partial';
+        }
+
+        return 'paid';
     }
 }

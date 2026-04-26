@@ -54,16 +54,8 @@ return [
         'title' => 'Payments',
         'icon' => 'bi-wallet2',
         'route' => 'payments.index',
-        'active' => ['payments.index'],
-        'permission' => 'view-payment', 
-    ],
-
-    [
-        'title' => 'Assign Payments',
-        'icon' => 'bi-plus-circle',
-        'route' => 'payments.create',
-        'active' => ['payments.create', 'payments.store.manager'],
-        'permission' => 'create-payment', 
+        'active' => ['payments.*'],
+        'permission' => 'view-payment',
     ],
 
 ];

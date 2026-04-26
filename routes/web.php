@@ -41,15 +41,13 @@ Route::middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
     Route::post('/users/store', [UserController::class, 'store'])->name('users.store');
     Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
-    Route::post('/users/{id}/update', [UserController::class, 'update'])->name('users.update');
+    Route::put('/users/{id}/update', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{id}/delete', [UserController::class, 'delete'])->name('users.delete');
 
     Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role.permissions.index');
     Route::get('/role-permissions/{role}', [RolePermissionController::class, 'edit'])->name('role.permissions.edit');
     Route::post('/role-permissions/{role}', [RolePermissionController::class, 'update'])->name('role.permissions.update');
 
-    Route::get('/manager/payments/create', [PaymentController::class, 'create'])->name('payments.create');
-    Route::post('/manager/payments/store', [PaymentController::class, 'storeByManager'])->name('payments.store.manager');
 });
 
 Route::middleware('auth')->group(function () {
@@ -64,11 +62,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/expenses/{id}/update', [ExpenseController::class, 'update'])->name('expenses.update');
     Route::post('/expenses/{id}/delete', [ExpenseController::class, 'delete'])->name('expenses.delete');
     Route::get('/expenses/{id}', [ExpenseController::class, 'show'])->name('expenses.show');
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-});
 
-Route::middleware(['auth', 'role:member'])->group(function () {
-    Route::post('/payments/pay/{id}', [PaymentController::class, 'pay'])->name('payments.pay');
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::post('/payments/{user}/pay', [PaymentController::class, 'pay'])->name('payments.pay');
+    Route::post('/payments/{payment}/update', [PaymentController::class, 'update'])->name('payments.update');
+    Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+    Route::get('/payments/{user}/add', [PaymentController::class, 'addPayment'])->name('payments.add');
+    Route::post('/users/{id}/update-total', [UserController::class, 'updateTotal'])->name('users.updateTotal');
 });
 
 Route::fallback(function () {

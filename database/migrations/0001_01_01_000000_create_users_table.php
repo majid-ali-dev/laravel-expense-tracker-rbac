@@ -18,6 +18,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone')->nullable();
+            $table->decimal('total_amount', 10, 2)->default(0);
+            $table->enum('status', ['unpaid', 'partial', 'paid'])->default('unpaid');
             $table->rememberToken();
             $table->timestamps();
         });
