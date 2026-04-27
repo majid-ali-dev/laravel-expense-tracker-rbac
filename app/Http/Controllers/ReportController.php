@@ -89,7 +89,7 @@ class ReportController extends Controller
                 'date' => $expense->date->format('d/m/Y'),
                 'milk' => $category === 'Milk' ? $expense->amount : 0,
                 'water' => $category === 'Water' ? $expense->amount : 0,
-                'item_name' => $expense->title,
+                'category_name' => $expense->title,
                 'amount' => $expense->amount,
                 'category' => $category,
                 'total_day_expense' => $dailyTotals[$expense->date->format('d/m/Y')] ?? $expense->amount,

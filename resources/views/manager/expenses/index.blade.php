@@ -42,7 +42,6 @@
                     <th>Title</th>
                     <th>Amount</th>
                     <th>Date</th>
-                    <th>Description</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -54,11 +53,10 @@
                     <td>{{ $expense->user->name }}</td>
                     <td>{{ $expense->title }}</td>
                     <td>Rs {{ $expense->amount }}</td>
-                    <td>{{ $expense->date }}</td>
-                    <td class="expense-description">{{ $expense->description }}</td>
+                    <td>{{ $expense->date->format('d/m/Y') }}</td>
                     <td>
                         <div class="action-group expense-actions-inner">
-
+{{-- iam java developer --}}
                             {{-- VIEW --}}
                             @if(auth()->user()->hasPermission('view-expense'))
                             <a href="{{ route('expenses.show', $expense->id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" title="View">

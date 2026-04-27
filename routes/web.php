@@ -3,14 +3,16 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SheetDownloaderController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::get('/', function () {
     return auth()->check()
@@ -50,6 +52,7 @@ Route::middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/role-permissions/{role}', [RolePermissionController::class, 'edit'])->name('role.permissions.edit');
     Route::post('/role-permissions/{role}', [RolePermissionController::class, 'update'])->name('role.permissions.update');
 
+    Route::resource('categories', CategoryController::class);
 });
 
 Route::middleware('auth')->group(function () {

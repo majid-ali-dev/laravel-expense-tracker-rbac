@@ -33,7 +33,9 @@ class ExpenseController extends Controller
             abort(403);
         }
 
-        return view('manager.expenses.create');
+        $categories = \App\Models\Category::orderBy('name')->get();
+
+        return view('manager.expenses.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -43,22 +45,13 @@ class ExpenseController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('expenses', 'title')->where(fn ($query) => $query
-                    ->where('user_id', Auth::id())
-                    ->whereDate('date', $request->input('date'))),
-            ],
+            'category_id' => ['required', 'exists:categories,id'],
             'amount' => ['required', 'numeric', 'min:0'],
             'description' => ['nullable', 'string', 'max:1000'],
             'date' => ['required', 'date'],
         ], [
-            'title.required' => 'Title field is required.',
-            'title.string' => 'Title must be a valid text value.',
-            'title.max' => 'Title may not be greater than 255 characters.',
-            'title.unique' => 'An expense with this title already exists for the selected date.',
+            'category_id.required' => 'Please select a category.',
+            'category_id.exists' => 'The selected category is invalid.',
             'amount.required' => 'Amount field is required.',
             'amount.numeric' => 'Amount must be a number.',
             'amount.min' => 'Amount must be at least 0.',
@@ -68,9 +61,42 @@ class ExpenseController extends Controller
             'date.date' => 'Date must be a valid date.',
         ]);
 
+        $category = \App\Models\Category::findOrFail($validated['category_id']);
+        $title = $category->name;
+
+        $existingExpense = Expense::where('user_id', Auth::id())
+            ->whereDate('date', $validated['date'])
+            ->where(function ($query) use ($category, $title) {
+                $query->where('category_id', $category->id);
+                $query->orWhere(function ($query) use ($title) {
+                    $query->whereNull('category_id')->where('title', $title);
+                });
+            })
+            ->first();
+
+        if ($existingExpense) {
+            $oldData = $this->historyPayload($existingExpense);
+            $existingExpense->amount += $validated['amount'];
+            $existingExpense->description = $validated['description'] ?? $existingExpense->description;
+            $existingExpense->save();
+
+            ExpenseHistory::create([
+                'expense_id' => $existingExpense->id,
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'old_data' => $oldData,
+                'new_data' => $this->historyPayload($existingExpense->fresh()),
+                'changed_fields' => 'amount',
+            ]);
+
+            return redirect()->route('expenses.index')
+                ->with('success', 'Expense amount updated successfully');
+        }
+
         $expense = Expense::create([
             'user_id' => Auth::id(),
-            'title' => $validated['title'],
+            'category_id' => $category->id,
+            'title' => $title,
             'amount' => $validated['amount'],
             'description' => $validated['description'] ?? null,
             'date' => $validated['date'],
@@ -312,7 +338,7 @@ class ExpenseController extends Controller
     {
         $query = Expense::query();
 
-        if (! $user->hasRole('manager') && ! $user->hasRole('super_admin')) {
+        if (! $user->hasRole('manager') && ! $user->hasRole('super_admin') && ! $user->hasPermission('view-all-expenses')) {
             $query->where('user_id', $user->id);
         }
 

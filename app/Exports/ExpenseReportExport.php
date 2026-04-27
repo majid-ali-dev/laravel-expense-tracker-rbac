@@ -60,7 +60,7 @@ class ExpenseReportExport
         ]);
 
         $row += 1;
-        $headers = ['Date', 'Milk', 'Water', 'Item Name', 'Amount', 'Category', 'Total Day Expense'];
+        $headers = ['Date', 'Milk', 'Water', 'Category Name', 'Amount', 'Category', 'Total Day Expense'];
         $sheet->fromArray($headers, null, "A{$row}");
         $sheet->getStyle("A{$row}:G{$row}")->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -73,7 +73,7 @@ class ExpenseReportExport
             $sheet->setCellValue("A{$row}", $item['date']);
             $sheet->setCellValue("B{$row}", $item['milk']);
             $sheet->setCellValue("C{$row}", $item['water']);
-            $sheet->setCellValueExplicit("D{$row}", $item['item_name'], PHPExcel_Cell_DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("D{$row}", $item['category_name'], PHPExcel_Cell_DataType::TYPE_STRING);
             $sheet->setCellValue("E{$row}", $item['amount']);
             $sheet->setCellValue("F{$row}", $item['category']);
             $sheet->setCellValue("G{$row}", $item['total_day_expense']);
