@@ -56,7 +56,6 @@
                     <td>{{ $expense->date->format('d/m/Y') }}</td>
                     <td>
                         <div class="action-group expense-actions-inner">
-{{-- iam java developer --}}
                             {{-- VIEW --}}
                             @if(auth()->user()->hasPermission('view-expense'))
                             <a href="{{ route('expenses.show', $expense->id) }}" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" title="View">
