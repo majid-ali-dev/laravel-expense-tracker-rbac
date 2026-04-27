@@ -2,19 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Category;
 use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
-    protected $fillable = [
-        'user_id',
-        'title',
-        'amount',
-        'description',
-        'date',
-        'updated_by', 
-    ];
-
+    protected $fillable = ['user_id', 'category_id', 'title', 'amount', 'description', 'date', 'updated_by'];
+    
     protected $casts = [
         'date' => 'date', 
     ];
@@ -33,5 +27,10 @@ class Expense extends Model
     public function histories()
     {
         return $this->hasMany(ExpenseHistory::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 }

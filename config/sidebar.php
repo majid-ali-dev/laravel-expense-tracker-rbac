@@ -43,6 +43,14 @@ return [
     ],
 
     [
+        'title' => 'Categories',
+        'icon' => 'bi-cart',
+        'route' => 'categories.index',
+        'active' => ['categories.*'],
+        'permission' => 'manage-categories',
+    ],
+
+    [
         'title' => 'Expenses',
         'icon' => 'bi-cash-stack',
         'route' => 'expenses.index',

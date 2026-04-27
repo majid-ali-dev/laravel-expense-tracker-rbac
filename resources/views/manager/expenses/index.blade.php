@@ -53,7 +53,7 @@
                     <td>{{ $expense->user->name }}</td>
                     <td>{{ $expense->title }}</td>
                     <td>Rs {{ $expense->amount }}</td>
-                    <td>{{ $expense->date }}</td>
+                    <td>{{ $expense->date->format('d/m/Y') }}</td>
                     <td>
                         <div class="action-group expense-actions-inner">
 

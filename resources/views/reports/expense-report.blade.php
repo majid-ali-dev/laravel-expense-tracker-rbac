@@ -93,7 +93,7 @@
                                 <th>Date</th>
                                 <th>Milk</th>
                                 <th>Water</th>
-                                <th>Item Name</th>
+                                <th>Category Name</th>
                                 <th>Amount</th>
                                 <th>Category</th>
                                 <th>Total Day</th>
@@ -105,7 +105,7 @@
                                     <td>{{ $row['date'] }}</td>
                                     <td>Rs {{ number_format($row['milk'], 2) }}</td>
                                     <td>Rs {{ number_format($row['water'], 2) }}</td>
-                                    <td>{{ $row['item_name'] }}</td>
+                                    <td>{{ $row['category_name'] }}</td>
                                     <td>Rs {{ number_format($row['amount'], 2) }}</td>
                                     <td>{{ $row['category'] }}</td>
                                     <td>Rs {{ number_format($row['total_day_expense'], 2) }}</td>

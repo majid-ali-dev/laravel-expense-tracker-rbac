@@ -22,6 +22,8 @@ class PermissionSeeder extends Seeder
             'edit-expense',
             'delete-expense',
             'download-expense',
+            'manage-categories',
+            'view-all-expenses',
 
             // 🔵 PAYMENT MANAGEMENT
             'create-payment',
