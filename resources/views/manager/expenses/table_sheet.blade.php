@@ -55,6 +55,12 @@
 
                 ksort($groupedExpenses);
                 $totalExpenses = $expenses->sum('amount');
+                $itemTotals = array_fill_keys($itemNames, 0);
+                foreach ($groupedExpenses as $expenseRow) {
+                    foreach ($itemNames as $itemName) {
+                        $itemTotals[$itemName] += $expenseRow[$itemName] ?? 0;
+                    }
+                }
                 @endphp
                 <table class="table table-bordered text-center align-middle mb-0">
                     <thead class="table-light">
@@ -76,7 +82,19 @@
                             <td>{{ number_format($expenseRow['total'] ?? 0, 2) }}</td>
                         </tr>
                         @endforeach
+                        <tr>
+                            <td colspan="{{ count($itemNames) + 2 }}">&nbsp;</td>
+                        </tr>
                     </tbody>
+                    <tfoot>
+                        <tr class="table-warning fw-semibold">
+                            <td>Grand Total</td>
+                            @foreach($itemNames as $itemName)
+                            <td>{{ number_format($itemTotals[$itemName] ?? 0, 2) }}</td>
+                            @endforeach
+                            <td>{{ number_format($totalExpenses, 2) }}</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
         </div>

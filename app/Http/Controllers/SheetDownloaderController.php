@@ -92,14 +92,23 @@ class SheetDownloaderController extends Controller
             fputcsv($file, array_merge(['Date'], $itemNames, ['Total']));
 
             // Expenses data
+            $itemTotals = array_fill_keys($itemNames, 0);
             foreach ($groupedExpenses as $expenseRow) {
                 $row = [$expenseRow['date']];
                 foreach ($itemNames as $itemName) {
-                    $row[] = isset($expenseRow[$itemName]) ? number_format($expenseRow[$itemName], 2) : '';
+                    $value = isset($expenseRow[$itemName]) ? number_format($expenseRow[$itemName], 2) : '';
+                    $row[] = $value;
+                    $itemTotals[$itemName] += $expenseRow[$itemName] ?? 0;
                 }
                 $row[] = number_format($expenseRow['total'] ?? 0, 2);
                 fputcsv($file, $row);
             }
+
+            // Empty row before grand total
+            fputcsv($file, []);
+            fputcsv($file, array_merge(['Grand Total'], array_map(function ($itemName) use ($itemTotals) {
+                return number_format($itemTotals[$itemName] ?? 0, 2);
+            }, $itemNames), [number_format($expenses->sum('amount'), 2)]));
 
             // Empty row
             fputcsv($file, []);
