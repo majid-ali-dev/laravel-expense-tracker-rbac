@@ -42,7 +42,6 @@
                     <th>Title</th>
                     <th>Amount</th>
                     <th>Date</th>
-                    <th>Description</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -55,7 +54,6 @@
                     <td>{{ $expense->title }}</td>
                     <td>Rs {{ $expense->amount }}</td>
                     <td>{{ $expense->date }}</td>
-                    <td class="expense-description">{{ $expense->description }}</td>
                     <td>
                         <div class="action-group expense-actions-inner">
 
