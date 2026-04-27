@@ -113,51 +113,27 @@
                     <thead class="table-light">
                         <tr>
                             <th>Member Name</th>
-                            <th>Total Amount (Rs)</th>
                             <th>Paid Amount (Rs)</th>
-                            <th>Remaining (Rs)</th>
-                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @php
-                        $grandTotal = 0;
                         $grandPaid = 0;
-                        $grandRemaining = 0;
                         @endphp
                         @foreach($memberTotals as $member)
                         @php
-                        $grandTotal += $member['total_amount'];
                         $grandPaid += $member['total_paid'];
-                        $grandRemaining += $member['remaining'];
                         @endphp
                         <tr>
                             <td class="fw-semibold">{{ $member['name'] }}</td>
-                            <td>Rs {{ number_format($member['total_amount'], 2) }}</td>
                             <td class="text-success">Rs {{ number_format($member['total_paid'], 2) }}</td>
-                            <td class="text-warning">Rs {{ number_format($member['remaining'], 2) }}</td>
-                            <td>
-                                @php
-                                $statusClass = [
-                                'paid' => 'bg-success',
-                                'partial' => 'bg-warning',
-                                'unpaid' => 'bg-danger'
-                                ];
-                                @endphp
-                                <span class="badge {{ $statusClass[$member['status']] ?? 'bg-secondary' }}">
-                                    {{ ucfirst($member['status']) }}
-                                </span>
-                            </td>
                         </tr>
                         @endforeach
                     </tbody>
                     <tfoot class="table-light">
                         <tr>
                             <th class="text-end">Grand Total:</th>
-                            <th>Rs {{ number_format($grandTotal, 2) }}</th>
                             <th>Rs {{ number_format($grandPaid, 2) }}</th>
-                            <th>Rs {{ number_format($grandRemaining, 2) }}</th>
-                            <th></th>
                         </tr>
                     </tfoot>
                 </table>
@@ -166,6 +142,9 @@
     </div>
 
     <!-- Final Totals -->
+    @php
+    $remainingBalance = $totalMemberPaid - $totalExpenses;
+    @endphp
     <div class="row g-3">
         <div class="col-md-4">
             <div class="metric-card text-center">
@@ -175,14 +154,14 @@
         </div>
         <div class="col-md-4">
             <div class="metric-card text-center">
-                <div class="metric-label">Total Member Amount</div>
-                <div class="metric-value text-success">Rs {{ number_format($totalMemberAmount, 2) }}</div>
+                <div class="metric-label">Total Member Paid Amount</div>
+                <div class="metric-value text-success">Rs {{ number_format($totalMemberPaid, 2) }}</div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="metric-card text-center">
-                <div class="metric-label">Remaining Balance</div>
-                <div class="metric-value text-warning">Rs {{ number_format($totalMemberRemaining, 2) }}</div>
+                <div class="metric-label">{{ $remainingBalance < 0 ? 'Extra Balance' : 'Remaining Balance' }}</div>
+                <div class="metric-value text-warning">Rs {{ number_format(abs($remainingBalance), 2) }}</div>
             </div>
         </div>
     </div>

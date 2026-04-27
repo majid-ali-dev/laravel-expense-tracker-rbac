@@ -115,33 +115,35 @@ class SheetDownloaderController extends Controller
 
             // Members summary header
             fputcsv($file, ['Members Summary']);
-            fputcsv($file, ['Member Name', 'Total Amount', 'Paid Amount', 'Remaining', 'Status']);
+            fputcsv($file, ['Member Name', 'Paid Amount']);
 
             // Member rows
             foreach ($members as $member) {
                 fputcsv($file, [
                     $member->name,
-                    number_format($member->total_amount ?? 0, 2),
                     number_format($member->total_paid ?? 0, 2),
-                    number_format($member->remaining ?? 0, 2),
-                    ucfirst($member->payment_status ?? 'unpaid'),
                 ]);
             }
 
             // Member totals row
-            $totalAmount = $members->sum('total_amount');
             $totalPaid = $members->sum('total_paid');
-            $totalRemaining = $members->sum('remaining');
 
             fputcsv($file, []);
-            fputcsv($file, ['TOTAL', number_format($totalAmount, 2), number_format($totalPaid, 2), number_format($totalRemaining, 2), '']);
+            fputcsv($file, ['TOTAL PAID', number_format($totalPaid, 2)]);
 
             // Final totals
+            $totalExpenses = $expenses->sum('amount');
+            $remainingBalance = $totalPaid - $totalExpenses;
+
             fputcsv($file, []);
             fputcsv($file, ['Final Totals']);
-            fputcsv($file, ['Total Expenses', number_format($expenses->sum('amount'), 2)]);
-            fputcsv($file, ['Total Member Amount', number_format($totalAmount, 2)]);
-            fputcsv($file, ['Remaining Balance', number_format($totalRemaining, 2)]);
+            fputcsv($file, ['Total Expenses', number_format($totalExpenses, 2)]);
+            fputcsv($file, ['Total Member Paid Amount', number_format($totalPaid, 2)]);
+            if ($remainingBalance < 0) {
+                fputcsv($file, ['Extra Balance', number_format(abs($remainingBalance), 2)]);
+            } else {
+                fputcsv($file, ['Remaining Balance', number_format($remainingBalance, 2)]);
+            }
 
             fclose($file);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
