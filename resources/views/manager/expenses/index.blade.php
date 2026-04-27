@@ -17,9 +17,9 @@
             @endif
 
             @if(auth()->user()->hasPermission('download-expense'))
-            <a href="{{ route('expenses.download') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" title="Download">
-                <i class="bi bi-download"></i>
-                <span>Download</span>
+            <a href="{{ route('expenses.table-sheet') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" title="View Sheet">
+                <i class="bi bi-file-earmark-excel"></i>
+                <span>Excel Sheet</span>
             </a>
             @endif
 
@@ -89,6 +89,7 @@
                 @endforeach
             </tbody>
         </table>
+        {{ $expenses->links() }}
     </div>
 
 </div>

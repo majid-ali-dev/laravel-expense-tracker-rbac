@@ -7,6 +7,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SheetDownloaderController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +59,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');
     Route::get('/expenses/download', [ExpenseController::class, 'download'])->name('expenses.download');
     Route::get('/expenses/history', [ExpenseController::class, 'history'])->name('expenses.history');
+    Route::get('/expenses/table-sheet', [SheetDownloaderController::class, 'index'])->name('expenses.table-sheet');
+    Route::get('/expenses/download-sheet', [SheetDownloaderController::class, 'download'])->name('expenses.download-sheet');
     Route::post('/expenses/store', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::get('/expenses/{id}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
     Route::post('/expenses/{id}/update', [ExpenseController::class, 'update'])->name('expenses.update');
@@ -69,6 +73,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
     Route::get('/payments/{user}/add', [PaymentController::class, 'addPayment'])->name('payments.add');
     Route::post('/users/{id}/update-total', [UserController::class, 'updateTotal'])->name('users.updateTotal');
+
+    Route::get('/reports/expense', [ReportController::class, 'index'])->name('reports.expense');
+    Route::get('/reports/expense/download', [ReportController::class, 'download'])->name('reports.expense.download');
 });
 
 Route::fallback(function () {

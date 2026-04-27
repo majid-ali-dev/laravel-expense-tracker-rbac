@@ -7,12 +7,13 @@ use App\Models\ExpenseHistory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class ExpenseController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (! $user->hasPermission('view-expense')) {
             abort(403);
@@ -21,14 +22,14 @@ class ExpenseController extends Controller
         $expenses = $this->expenseQueryFor($user)
             ->with('user')
             ->latest()
-            ->get();
+            ->simplePaginate(5);
 
         return view('manager.expenses.index', compact('expenses'));
     }
 
     public function create()
     {
-        if (! auth()->user()->hasPermission('create-expense')) {
+        if (! Auth::user()->hasPermission('create-expense')) {
             abort(403);
         }
 
@@ -37,7 +38,7 @@ class ExpenseController extends Controller
 
     public function store(Request $request)
     {
-        if (! auth()->user()->hasPermission('create-expense')) {
+        if (! Auth::user()->hasPermission('create-expense')) {
             abort(403);
         }
 
@@ -47,7 +48,7 @@ class ExpenseController extends Controller
                 'string',
                 'max:255',
                 Rule::unique('expenses', 'title')->where(fn ($query) => $query
-                    ->where('user_id', auth()->id())
+                    ->where('user_id', Auth::id())
                     ->whereDate('date', $request->input('date'))),
             ],
             'amount' => ['required', 'numeric', 'min:0'],
@@ -68,7 +69,7 @@ class ExpenseController extends Controller
         ]);
 
         $expense = Expense::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'title' => $validated['title'],
             'amount' => $validated['amount'],
             'description' => $validated['description'] ?? null,
@@ -77,7 +78,7 @@ class ExpenseController extends Controller
 
         ExpenseHistory::create([
             'expense_id' => $expense->id,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'action' => 'created',
             'old_data' => null,
             'new_data' => $this->historyPayload($expense->fresh()),
@@ -89,7 +90,7 @@ class ExpenseController extends Controller
 
     public function edit($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (! $user->hasPermission('edit-expense')) {
             abort(403);
@@ -102,7 +103,7 @@ class ExpenseController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (! $user->hasPermission('edit-expense')) {
             abort(403);
@@ -141,7 +142,7 @@ class ExpenseController extends Controller
             'amount' => $validated['amount'],
             'description' => $validated['description'] ?? null,
             'date' => $validated['date'],
-            'updated_by' => auth()->id(),
+            'updated_by' => Auth::id(),
         ];
 
         $expense->update($newValues);
@@ -153,7 +154,7 @@ class ExpenseController extends Controller
         if (! empty($changedFields)) {
             ExpenseHistory::create([
                 'expense_id' => $expense->id,
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'action' => 'updated',
                 'old_data' => $oldData,
                 'new_data' => $newData,
@@ -166,7 +167,7 @@ class ExpenseController extends Controller
 
     public function delete($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (! $user->hasPermission('delete-expense')) {
             abort(403);
@@ -177,7 +178,7 @@ class ExpenseController extends Controller
 
         ExpenseHistory::create([
             'expense_id' => $expense->id,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'action' => 'deleted',
             'old_data' => $oldData,
             'new_data' => null,
@@ -191,7 +192,7 @@ class ExpenseController extends Controller
 
     public function show($id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (! $user->hasPermission('view-expense')) {
             abort(403);
@@ -206,7 +207,7 @@ class ExpenseController extends Controller
 
     public function download()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (! $user->hasPermission('download-expense')) {
             abort(403);
@@ -217,12 +218,12 @@ class ExpenseController extends Controller
             ->latest()
             ->get();
 
-        $filename = 'expenses-report-' . now()->format('Y-m-d-His') . '.csv';
+        $filename = 'expenses-report-'.now()->format('Y-m-d-His').'.csv';
 
         return response()->streamDownload(function () use ($expenses) {
             $file = fopen('php://output', 'w');
 
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
             fputcsv($file, ['Title', 'Amount', 'Date', 'Description']);
 
@@ -243,7 +244,7 @@ class ExpenseController extends Controller
 
     public function history()
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if (! $user->hasRole('manager') && ! $user->hasRole('super_admin')) {
             abort(403);
@@ -267,7 +268,7 @@ class ExpenseController extends Controller
                 $snapshot = $latestHistory->new_data ?? $latestHistory->old_data ?? [];
 
                 return (object) [
-                    'id' => 'deleted-' . $expenseId,
+                    'id' => 'deleted-'.$expenseId,
                     'title' => $snapshot['title'] ?? '-',
                     'amount' => (float) ($snapshot['amount'] ?? 0),
                     'date' => ! empty($snapshot['date']) ? Carbon::parse($snapshot['date']) : null,
