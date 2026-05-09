@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Expense;
 use App\Models\ExpenseHistory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ExpenseController extends Controller
 {
@@ -33,7 +34,7 @@ class ExpenseController extends Controller
             abort(403);
         }
 
-        $categories = \App\Models\Category::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
 
         return view('manager.expenses.create', compact('categories'));
     }
@@ -61,7 +62,7 @@ class ExpenseController extends Controller
             'date.date' => 'Date must be a valid date.',
         ]);
 
-        $category = \App\Models\Category::findOrFail($validated['category_id']);
+        $category = Category::findOrFail($validated['category_id']);
         $title = $category->name;
 
         $existingExpense = Expense::where('user_id', Auth::id())
