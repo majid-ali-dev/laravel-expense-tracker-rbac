@@ -22,7 +22,7 @@ class ExpenseSeeder extends Seeder
         ];
         foreach ($defaultExpenses as $expense) {
             Expense::create([
-                'user_id' => 3, // Assuming user with ID 3 exists
+                'user_id' => 1, // Assuming user with ID 3 exists
                 'category_id' => null, // You can assign category IDs if needed
                 'title' => $expense['title'],
                 'amount' => $expense['amount'],
