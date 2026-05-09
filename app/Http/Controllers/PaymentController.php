@@ -207,6 +207,6 @@ class PaymentController extends Controller
                     ->latest(),
             ])
             ->orderBy('name')
-            ->simplePaginate(5); // Using simplePaginate(5)
+            ->simplePaginate(10); // Using simplePaginate(5)
     }
 }
