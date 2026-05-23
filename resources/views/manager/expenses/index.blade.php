@@ -19,7 +19,7 @@
             @if(auth()->user()->hasPermission('download-expense'))
             <a href="{{ route('expenses.table-sheet') }}" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2" title="View Sheet">
                 <i class="bi bi-file-earmark-excel"></i>
-                <span>Excel Sheet</span>
+                <span>View</span>
             </a>
             @endif
 
