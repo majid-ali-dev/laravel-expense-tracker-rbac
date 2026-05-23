@@ -18,7 +18,7 @@
             </div>
             <div>
                 <a href="{{ route('expenses.download-sheet') }}" class="btn btn-success btn-lg">
-                    <i class="bi bi-download"></i> Download Excel Sheet
+                    <i class="bi bi-download"></i> Download Sheet
                 </a>
                 <a href="{{ route('expenses.index') }}" class="btn btn-outline-secondary btn-lg">
                     <i class="bi bi-arrow-left"></i> Back

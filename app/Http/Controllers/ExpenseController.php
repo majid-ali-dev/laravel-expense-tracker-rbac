@@ -22,8 +22,8 @@ class ExpenseController extends Controller
 
         $expenses = $this->expenseQueryFor($user)
             ->with('user')
-            ->latest()
-            ->simplePaginate(5);
+            ->orderBy('date', 'desc')
+            ->simplePaginate(8);
 
         return view('manager.expenses.index', compact('expenses'));
     }

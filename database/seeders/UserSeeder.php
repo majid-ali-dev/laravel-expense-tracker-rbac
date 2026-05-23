@@ -14,9 +14,9 @@ class UserSeeder extends Seeder
         $managerRoleId = Role::where('name', 'manager')->value('id');
 
         $nadeem = User::firstOrCreate(
-            ['email' => 'nadeem@gmail.com'],
+            ['email' => 'majidalishar2@gmail.com'],
             [
-                'name' => 'Nadeem Ali',
+                'name' => 'Majid Ali',
                 'phone' => '096545567',
                 'password' => Hash::make('12345'),
             ]
