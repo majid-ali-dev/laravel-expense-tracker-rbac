@@ -4,156 +4,129 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\User;
-use Carbon\Carbon;
+use App\Models\Payment; // 🔥 IMPORTANT ADD
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class SheetDownloaderController extends Controller
 {
     public function index(Request $request)
     {
-        if (! Auth::user()->hasPermission('download-expense')) {
+        if (!Auth::user()->hasPermission('download-expense')) {
             abort(403);
         }
 
-        // Current month by default
-        $selectedMonth = $request->get('month', now()->format('Y-m'));
+        $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
+        $to   = $request->get('to', now()->endOfMonth()->format('Y-m-d'));
 
-        $expenseQuery = Expense::with('user')->latest('date');
+        // ======================
+        // EXPENSES (CORRECT)
+        // ======================
+        $expenses = Expense::with('user')
+            ->whereBetween('date', [$from, $to])
+            ->latest('date')
+            ->get();
 
-        if ($selectedMonth !== 'all') {
-            $expenseQuery->whereYear('date', Carbon::parse($selectedMonth)->year)
-                ->whereMonth('date', Carbon::parse($selectedMonth)->month);
-        }
-
-        // Search filter
-        $search = $request->get('search');
-        if ($search) {
-            $expenseQuery->where('title', 'like', '%' . $search . '%');
-        }
-
-        $expenses = $expenseQuery->get();
-
+        // ======================
+        // MEMBERS
+        // ======================
         $members = User::whereHas('roles', fn($q) => $q->where('name', 'member'))->get();
 
-        $memberTotals = $members->map(fn($m) => [
-            'name'         => $m->name,
-            'total_amount' => $m->total_amount ?? 0,
-            'total_paid'   => $m->total_paid ?? 0,
-            'remaining'    => $m->remaining ?? 0,
-            'status'       => $m->payment_status ?? 'unpaid',
-        ])->toArray();
+        // ======================
+        // 🔥 FIXED PAYMENTS LOGIC
+        // ======================
+        $memberTotals = $members->map(function ($member) use ($from, $to) {
 
-        // Build months dropdown: current + past 11 months
-        $months = collect(range(0, 11))->map(fn($i) => now()->subMonths($i)->format('Y-m'));
+            $paid = \App\Models\Payment::where('user_id', $member->id)
+                ->whereBetween('created_at', [$from, $to])
+                ->sum('paid_amount');
+
+            return [
+                'name'       => $member->name,
+                'total_paid' => $paid,
+            ];
+        });
+
+        $totalExpenses   = $expenses->sum('amount');
+        $totalMemberPaid = collect($memberTotals)->sum('total_paid');
 
         return view('manager.expenses.table_sheet', compact(
             'expenses',
             'members',
             'memberTotals',
-            'months',
-            'selectedMonth',
-            'search',
-        ) + [
-            'totalExpenses'        => $expenses->sum('amount'),
-            'totalMemberAmount'    => $members->sum('total_amount'),
-            'totalMemberPaid'      => $members->sum('total_paid'),
-            'totalMemberRemaining' => $members->sum('remaining'),
-        ]);
+            'from',
+            'to',
+            'totalExpenses',
+            'totalMemberPaid'
+        ));
     }
 
     public function download(Request $request)
     {
-        if (! Auth::user()->hasPermission('download-expense')) {
+        if (!Auth::user()->hasPermission('download-expense')) {
             abort(403);
         }
 
-        $selectedMonth = $request->get('month', now()->format('Y-m'));
+        $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
+        $to   = $request->get('to', now()->endOfMonth()->format('Y-m-d'));
 
-        $expenseQuery = Expense::with('user')->latest('date');
+        $expenses = Expense::with('user')
+            ->whereBetween('date', [$from, $to])
+            ->get();
 
-        if ($selectedMonth !== 'all') {
-            $expenseQuery->whereYear('date', Carbon::parse($selectedMonth)->year)
-                ->whereMonth('date', Carbon::parse($selectedMonth)->month);
-        }
+        $members = User::whereHas('roles', fn($q) => $q->where('name', 'member'))->get();
 
-        $expenses  = $expenseQuery->get();
-        $members   = User::whereHas('roles', fn($q) => $q->where('name', 'member'))->get();
+        $memberTotals = $members->map(function ($member) use ($from, $to) {
 
-        $label    = $selectedMonth === 'all'
-            ? 'All Months'
-            : Carbon::parse($selectedMonth)->format('F Y');
+            return [
+                'name' => $member->name,
+                'total_paid' => \App\Models\Payment::where('user_id', $member->id)
+                    ->whereBetween('created_at', [$from, $to])
+                    ->sum('paid_amount'),
+            ];
+        });
+
+        $totalPaid     = $memberTotals->sum('total_paid');
+        $totalExpenses = $expenses->sum('amount');
 
         $filename = 'expense-sheet-' . now()->format('Y-m-d-His') . '.csv';
 
-        return response()->streamDownload(function () use ($expenses, $members, $label) {
+        return response()->streamDownload(function () use ($expenses, $memberTotals, $from, $to, $totalPaid, $totalExpenses) {
+
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            $groupedExpenses = [];
-            $itemNames       = [];
+            fputcsv($file, ["Expense Sheet ($from to $to)"]);
+            fputcsv($file, []);
+
+            fputcsv($file, ['Date', 'Title', 'Amount']);
 
             foreach ($expenses as $expense) {
-                $dateKey  = $expense->date->format('Y-m-d');
-                $itemName = trim($expense->title) ?: 'Other';
-
-                if (! in_array($itemName, $itemNames, true)) {
-                    $itemNames[] = $itemName;
-                }
-
-                $groupedExpenses[$dateKey]['date']       = $expense->date->format('d/m/Y');
-                $groupedExpenses[$dateKey][$itemName]    = ($groupedExpenses[$dateKey][$itemName] ?? 0) + $expense->amount;
-                $groupedExpenses[$dateKey]['total']      = ($groupedExpenses[$dateKey]['total'] ?? 0) + $expense->amount;
-            }
-
-            ksort($groupedExpenses);
-
-            fputcsv($file, [$label . ' - Saved']);
-            fputcsv($file, []);
-            fputcsv($file, array_merge(['Date'], $itemNames, ['Total']));
-
-            $itemTotals = array_fill_keys($itemNames, 0);
-            foreach ($groupedExpenses as $row) {
-                $line = [$row['date']];
-                foreach ($itemNames as $name) {
-                    $line[]             = isset($row[$name]) ? number_format($row[$name], 2) : '';
-                    $itemTotals[$name] += $row[$name] ?? 0;
-                }
-                $line[] = number_format($row['total'] ?? 0, 2);
-                fputcsv($file, $line);
+                fputcsv($file, [
+                    $expense->date->format('d/m/Y'),
+                    $expense->title,
+                    number_format($expense->amount, 2)
+                ]);
             }
 
             fputcsv($file, []);
-            fputcsv($file, array_merge(
-                ['Grand Total'],
-                array_map(fn($n) => number_format($itemTotals[$n] ?? 0, 2), $itemNames),
-                [number_format($expenses->sum('amount'), 2)]
-            ));
+            fputcsv($file, ['TOTAL EXPENSES', number_format($totalExpenses, 2)]);
 
             fputcsv($file, []);
             fputcsv($file, ['Members Summary']);
-            fputcsv($file, ['Member Name', 'Paid Amount']);
 
-            foreach ($members as $member) {
-                fputcsv($file, [$member->name, number_format($member->total_paid ?? 0, 2)]);
+            foreach ($memberTotals as $m) {
+                fputcsv($file, [$m['name'], number_format($m['total_paid'], 2)]);
             }
 
-            $totalPaid        = $members->sum('total_paid');
-            $totalExpenses    = $expenses->sum('amount');
-            $remainingBalance = $totalPaid - $totalExpenses;
+            $balance = $totalPaid - $totalExpenses;
 
             fputcsv($file, []);
             fputcsv($file, ['TOTAL PAID', number_format($totalPaid, 2)]);
-            fputcsv($file, []);
-            fputcsv($file, ['Final Totals']);
-            fputcsv($file, ['Total Expenses', number_format($totalExpenses, 2)]);
-            fputcsv($file, ['Total Member Paid Amount', number_format($totalPaid, 2)]);
-            fputcsv($file, [
-                $remainingBalance < 0 ? 'Extra Balance' : 'Remaining Balance',
-                number_format(abs($remainingBalance), 2),
-            ]);
+            fputcsv($file, ['BALANCE', number_format(abs($balance), 2)]);
 
             fclose($file);
-        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }, $filename);
     }
 }
