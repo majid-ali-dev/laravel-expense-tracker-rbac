@@ -2,221 +2,226 @@
 
 @section('title', 'Expense Table Sheet')
 @section('page_title', 'Expense Report Sheet')
-@section('page_subtitle', 'View complete expense report with member payments')
 
 @section('content')
+
 @php
     use Carbon\Carbon;
-    $monthLabel = $selectedMonth === 'all'
-        ? 'All Months'
-        : Carbon::parse($selectedMonth)->format('F Y');
+    $monthLabel = Carbon::parse($from)->format('d M Y') . ' - ' . Carbon::parse($to)->format('d M Y');
 @endphp
 
 <div class="container-fluid px-0">
 
-    {{-- Header --}}
+    {{-- HEADER --}}
     <div class="page-header mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
             <div>
-                <span class="page-eyebrow">
-                    <i class="bi bi-file-earmark-excel"></i> Excel Sheet
-                </span>
-                <h4 class="page-title m-2"> <span style="color: blue;"> {{ $monthLabel }}</span> </h4>
-                <p class="page-description">Expense and payment summary for {{ $monthLabel }}</p>
+                <h4 class="page-title fw-bold">
+                    Expense Report
+                    <small style="color:#1a74c4">({{ $monthLabel }})</small>
+                </h4>
             </div>
+
             <div class="d-flex gap-2">
-                <a href="{{ route('expenses.download-sheet', array_filter(['month' => $selectedMonth])) }}"
+                <a href="{{ route('expenses.download-sheet', ['from' => $from, 'to' => $to]) }}"
                    class="btn btn-success btn-lg">
                     <i class="bi bi-download"></i> Download Sheet
                 </a>
-                <a href="{{ route('expenses.index') }}" class="btn btn-outline-secondary btn-lg">Back</a>
+
+                <a href="{{ route('expenses.index') }}"
+                   class="btn btn-outline-secondary btn-lg">
+                    Back
+                </a>
             </div>
+
         </div>
     </div>
 
-    {{-- Filter Bar --}}
+    {{-- FILTER --}}
     <div class="card shadow-sm rounded-4 mb-4">
         <div class="card-body">
-            <form method="GET" action="{{ route('expenses.table-sheet') }}"
-                  class="d-flex flex-wrap align-items-end gap-3">
 
-                {{-- Month Dropdown --}}
+            <form method="GET" action="{{ route('expenses.table-sheet') }}"
+                  class="d-flex gap-3 align-items-end flex-wrap">
+
                 <div>
-                    <label class="form-label fw-semibold mb-1">Month</label>
-                    <select name="month" class="form-select" onchange="this.form.submit()">
-                        <option value="all" {{ $selectedMonth === 'all' ? 'selected' : '' }}>
-                            All Months
-                        </option>
-                        @foreach($months as $month)
-                            <option value="{{ $month }}"
-                                {{ $selectedMonth === $month ? 'selected' : '' }}>
-                                {{ Carbon::parse($month)->format('F Y') }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <label class="form-label">From</label>
+                    <input type="date" name="from" value="{{ $from }}" class="form-control">
                 </div>
 
-                {{-- Search --}}
-                <div class="flex-grow-1">
-                    <label class="form-label fw-semibold mb-1">Search</label>
-                    <input type="text"
-                           name="search"
-                           class="form-control"
-                           placeholder="Search by expense title..."
-                           value="{{ $search }}">
+                <div>
+                    <label class="form-label">To</label>
+                    <input type="date" name="to" value="{{ $to }}" class="form-control">
                 </div>
 
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i> Search
+                    <button class="btn btn-primary">
+                        Filter
                     </button>
-                    <a href="{{ route('expenses.table-sheet') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle"></i> Clear
+
+                    <a href="{{ route('expenses.table-sheet') }}"
+                       class="btn btn-outline-secondary">
+                        Reset
                     </a>
                 </div>
 
             </form>
+
         </div>
     </div>
 
-    {{-- Daily Expenses Table --}}
-    <div class="card shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0 fw-semibold">
-                <i class="bi bi-table me-2"></i>Daily Expenses
-            </h5>
+    {{-- DAILY EXPENSES --}}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Daily Expenses</h5>
         </div>
+
         <div class="card-body p-0">
+
             @php
-                $groupedExpenses = [];
-                $itemNames       = [];
+                $grouped = [];
+                $items = [];
 
                 foreach ($expenses as $expense) {
-                    $dateKey  = $expense->date->format('Y-m-d');
-                    $itemName = trim($expense->title) ?: 'Other';
+                    $date = $expense->date->format('Y-m-d');
+                    $title = $expense->title ?: 'Other';
 
-                    if (! in_array($itemName, $itemNames, true)) {
-                        $itemNames[] = $itemName;
+                    if (!in_array($title, $items)) {
+                        $items[] = $title;
                     }
 
-                    $groupedExpenses[$dateKey]['date']    = $expense->date->format('d/m/Y');
-                    $groupedExpenses[$dateKey][$itemName] = ($groupedExpenses[$dateKey][$itemName] ?? 0) + $expense->amount;
-                    $groupedExpenses[$dateKey]['total']   = ($groupedExpenses[$dateKey]['total'] ?? 0) + $expense->amount;
+                    $grouped[$date]['date'] = $expense->date->format('d/m/Y');
+                    $grouped[$date][$title] = ($grouped[$date][$title] ?? 0) + $expense->amount;
+                    $grouped[$date]['total'] = ($grouped[$date]['total'] ?? 0) + $expense->amount;
                 }
 
-                ksort($groupedExpenses);
+                ksort($grouped);
 
-                $totalExpenses = $expenses->sum('amount');
-                $itemTotals    = array_fill_keys($itemNames, 0);
-                foreach ($groupedExpenses as $row) {
-                    foreach ($itemNames as $name) {
-                        $itemTotals[$name] += $row[$name] ?? 0;
+                $itemTotals = array_fill_keys($items, 0);
+                foreach ($grouped as $row) {
+                    foreach ($items as $item) {
+                        $itemTotals[$item] += $row[$item] ?? 0;
                     }
                 }
             @endphp
 
-            @if($groupedExpenses)
             <div class="table-responsive">
-                <table class="table table-bordered text-center align-middle mb-0">
-                    <thead class="table-light">
+                <table class="table table-bordered text-center">
+                    <thead>
                         <tr>
                             <th>Date</th>
-                            @foreach($itemNames as $name)
-                                <th>{{ $name }}</th>
+                            @foreach($items as $item)
+                                <th>{{ $item }}</th>
                             @endforeach
                             <th>Total</th>
                         </tr>
                     </thead>
+
                     <tbody>
-                        @foreach($groupedExpenses as $row)
-                        <tr>
-                            <td>{{ $row['date'] }}</td>
-                            @foreach($itemNames as $name)
-                                <td>{{ isset($row[$name]) ? number_format($row[$name], 2) : '' }}</td>
-                            @endforeach
-                            <td>{{ number_format($row['total'] ?? 0, 2) }}</td>
-                        </tr>
+                        @foreach($grouped as $row)
+                            <tr>
+                                <td>{{ $row['date'] }}</td>
+
+                                @foreach($items as $item)
+                                    <td>{{ number_format($row[$item] ?? 0, 2) }}</td>
+                                @endforeach
+
+                                <td>{{ number_format($row['total'], 2) }}</td>
+                            </tr>
                         @endforeach
-                        <tr><td colspan="{{ count($itemNames) + 2 }}">&nbsp;</td></tr>
                     </tbody>
+
                     <tfoot>
-                        <tr class="table-warning fw-semibold">
+                        <tr class="table-warning fw-bold">
                             <td>Grand Total</td>
-                            @foreach($itemNames as $name)
-                                <td>{{ number_format($itemTotals[$name] ?? 0, 2) }}</td>
+
+                            @foreach($items as $item)
+                                <td>{{ number_format($itemTotals[$item], 2) }}</td>
                             @endforeach
+
                             <td>{{ number_format($totalExpenses, 2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-            @else
-            <div class="text-center text-muted py-5">
-                <i class="bi bi-inbox fs-1"></i>
-                <p class="mt-2">No expenses found for the selected filter.</p>
-            </div>
-            @endif
+
         </div>
     </div>
 
-    {{-- Members Payment Summary --}}
-    <div class="card shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0 fw-semibold">
-                <i class="bi bi-people me-2"></i>Members Payment Summary
-            </h5>
+    {{-- MEMBERS SUMMARY (NOW FIXED - PAYMENT BASED) --}}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>Members Summary</h5>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-bordered text-center align-middle mb-0">
-                    <thead class="table-light">
+
+        <div class="card-body">
+
+            <table class="table table-bordered text-center">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Paid</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @php $totalPaid = 0; @endphp
+
+                    @foreach($memberTotals as $m)
+                        @php $totalPaid += $m['total_paid']; @endphp
                         <tr>
-                            <th>Member Name</th>
-                            <th>Paid Amount (Rs)</th>
+                            <td>{{ $m['name'] }}</td>
+                            <td class="text-success fw-bold">
+                                Rs {{ number_format($m['total_paid'], 2) }}
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @php $grandPaid = 0; @endphp
-                        @foreach($memberTotals as $member)
-                            @php $grandPaid += $member['total_paid']; @endphp
-                            <tr>
-                                <td class="fw-semibold">{{ $member['name'] }}</td>
-                                <td class="text-success">Rs {{ number_format($member['total_paid'], 2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="table-light">
-                        <tr>
-                            <th class="text-end">Grand Total:</th>
-                            <th>Rs {{ number_format($grandPaid, 2) }}</th>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
+                    @endforeach
+                </tbody>
+
+                <tfoot>
+                    <tr class="table-light fw-bold">
+                        <th>Total</th>
+                        <th class="text-success">
+                            Rs {{ number_format($totalPaid, 2) }}
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+
         </div>
     </div>
 
-    {{-- Final Summary Cards --}}
-    @php $remainingBalance = $totalMemberPaid - $totalExpenses; @endphp
+    {{-- FINAL SUMMARY CARDS --}}
+    @php $balance = $totalPaid - $totalExpenses; @endphp
+
     <div class="row g-3">
+
         <div class="col-md-4">
-            <div class="metric-card text-center">
-                <div class="metric-label">Total Expenses</div>
-                <div class="metric-value text-primary">Rs {{ number_format($totalExpenses, 2) }}</div>
+            <div class="card p-3 text-center border-primary shadow-sm">
+                <h6 class="text-primary">Total Expenses</h6>
+                <h4 class="text-primary">Rs {{ number_format($totalExpenses, 2) }}</h4>
             </div>
         </div>
+
         <div class="col-md-4">
-            <div class="metric-card text-center">
-                <div class="metric-label">Total Member Paid Amount</div>
-                <div class="metric-value text-success">Rs {{ number_format($totalMemberPaid, 2) }}</div>
+            <div class="card p-3 text-center border-success shadow-sm">
+                <h6 class="text-success">Total Paid</h6>
+                <h4 class="text-success">Rs {{ number_format($totalPaid, 2) }}</h4>
             </div>
         </div>
+
         <div class="col-md-4">
-            <div class="metric-card text-center">
-                <div class="metric-label">{{ $remainingBalance < 0 ? 'Extra Balance' : 'Remaining Balance' }}</div>
-                <div class="metric-value text-warning">Rs {{ number_format(abs($remainingBalance), 2) }}</div>
+            <div class="card p-3 text-center border-warning shadow-sm">
+                <h6 class="text-warning">
+                    {{ $balance < 0 ? 'Remaining Balance' : 'Extra Balance' }}
+                </h6>
+                <h4 class="text-warning">
+                    Rs {{ number_format(abs($balance), 2) }}
+                </h4>
             </div>
         </div>
+
     </div>
 
 </div>
