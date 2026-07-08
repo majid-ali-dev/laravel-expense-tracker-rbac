@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\User;
-use App\Models\Payment; // 🔥 IMPORTANT ADD
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -20,25 +20,20 @@ class SheetDownloaderController extends Controller
         $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
         $to   = $request->get('to', now()->endOfMonth()->format('Y-m-d'));
 
-        // ======================
-        // EXPENSES (CORRECT)
-        // ======================
+       
+        // EXPENSES 
         $expenses = Expense::with('user')
             ->whereBetween('date', [$from, $to])
             ->latest('date')
             ->get();
 
-        // ======================
         // MEMBERS
-        // ======================
         $members = User::whereHas('roles', fn($q) => $q->where('name', 'member'))->get();
 
-        // ======================
-        // 🔥 FIXED PAYMENTS LOGIC
-        // ======================
+        // PAYMENTS LOGIC
         $memberTotals = $members->map(function ($member) use ($from, $to) {
 
-            $paid = \App\Models\Payment::where('user_id', $member->id)
+            $paid = Payment::where('user_id', $member->id)
                 ->whereBetween('created_at', [$from, $to])
                 ->sum('paid_amount');
 
@@ -81,7 +76,7 @@ class SheetDownloaderController extends Controller
 
             return [
                 'name' => $member->name,
-                'total_paid' => \App\Models\Payment::where('user_id', $member->id)
+                'total_paid' => Payment::where('user_id', $member->id)
                     ->whereBetween('created_at', [$from, $to])
                     ->sum('paid_amount'),
             ];

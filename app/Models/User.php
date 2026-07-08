@@ -10,18 +10,9 @@ class User extends Authenticatable
 {
     protected $with = ['roles.permissions'];
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'phone',
-        'total_amount',
-        'status',
-    ];
+    protected $fillable = ['name','email','password','phone','total_amount','status'];
 
-    protected $casts = [
-        'total_amount' => 'decimal:2',
-    ];
+    protected $casts = ['total_amount' => 'decimal:2'];
 
     public function expenses()
     {
@@ -40,13 +31,10 @@ class User extends Authenticatable
 
     public function permissions(): Collection
     {
-        return $this->roles
-            ->flatMap(fn ($role) => $role->permissions)
-            ->pluck('name')
-            ->filter()
-            ->unique()
-            ->values();
+        return $this->roles->flatMap(fn ($role) 
+        => $role->permissions)->pluck('name')->filter()->unique()->values();
     }
+
 
     public function hasRole(string $role): bool
     {
@@ -65,11 +53,7 @@ class User extends Authenticatable
 
     public function roleNames(): Collection
     {
-        return $this->roles
-            ->pluck('name')
-            ->filter()
-            ->unique()
-            ->values();
+        return $this->roles->pluck('name')->filter()->unique()->values();
     }
 
     public function getTotalPaidAttribute()

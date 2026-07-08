@@ -16,10 +16,10 @@
     <div class="page-header mb-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
 
-            <div>
+           <div class="no-select">
                 <h4 class="page-title fw-bold">
-                    Expense Report
-                    <small style="color:#1a74c4">({{ $monthLabel }})</small>
+                Expense Report
+                <small style="color:#1a74c4">({{ $monthLabel }})</small>
                 </h4>
             </div>
 

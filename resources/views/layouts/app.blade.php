@@ -864,6 +864,12 @@
         .transition-all {
             transition: all 0.3s ease;
         }
+        .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+}
 
     </style>
 
