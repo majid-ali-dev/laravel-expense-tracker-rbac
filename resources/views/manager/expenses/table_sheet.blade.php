@@ -96,7 +96,7 @@
                     $grouped[$date]['total'] = ($grouped[$date]['total'] ?? 0) + $expense->amount;
                 }
 
-                ksort($grouped);
+                krsort($grouped);
 
                 $itemTotals = array_fill_keys($items, 0);
                 foreach ($grouped as $row) {
